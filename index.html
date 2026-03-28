@@ -2931,17 +2931,29 @@ function updateOcrMsg(msg) {
   const el = document.getElementById('ocrMsg');
   if (el) el.textContent = msg;
 }
-
 async function getTesseractWorker() {
   if (tesseractWorker) return tesseractWorker;
   updateOcrMsg('جارٍ تهيئة محرك القراءة...');
 
-  const logFn = m => {
-    if      (m.status==='loading tesseract core')       updateOcrMsg('جارٍ تحميل المحرك...');
-    else if (m.status==='loading language traineddata') updateOcrMsg('جارٍ تحميل بيانات اللغة... '+Math.round((m.progress||0)*100)+'%');
-    else if (m.status==='initializing api')             updateOcrMsg('جارٍ التهيئة...');
-    else if (m.status==='recognizing text')             updateOcrMsg('جارٍ قراءة اللوحة... '+Math.round((m.progress||0)*100)+'%');
-  };
+  // استخدام الطريقة الأضمن لتعريف الـ Worker في الإصدار 4
+  const worker = await Tesseract.createWorker({
+    logger: m => {
+      if (m.status === 'recognizing text') updateOcrMsg('جارٍ القراءة... ' + Math.round(m.progress * 100) + '%');
+    }
+  });
+
+  await worker.loadLanguage('ara+eng');
+  await worker.initialize('ara+eng');
+
+  // أهم إعداد للوحات المصرية: تقليل التشويش وتحديد الحروف
+  await worker.setParameters({
+    tessedit_pageseg_mode: '7', // Mode 7 أفضل للسطر الواحد (اللوحات) من Mode 11
+    tessedit_char_whitelist: 'أبتثجحخدذرزسشصضطظعغفقكلمنهوي0123456789٠١٢٣٤٥٦٧٨٩ ',
+  });
+
+  tesseractWorker = worker;
+  return worker;
+}
 
   let w;
   // Method A: v4 standard API
@@ -3016,47 +3028,28 @@ async function runOCR(imageData) {
     showToast('⚠️ تعذرت القراءة — عدّل الرقم يدوياً');
   }
 }
-
 function parseEgyptianPlate(rawText) {
   if (!rawText) return '';
+  
+  // تحويل الأرقام الهندية لأرقام عادية
+  let t = rawText.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
 
-  // Normalize whitespace
-  let t = rawText.replace(/[\r\n\t]/g, ' ').replace(/\s+/g, ' ').trim();
+  // حذف الكلمات التشويشية الشائعة في لوحات مصر
+  const NOISE = ['مصر', 'EGYPT', 'ENG', 'GOV', 'جمهورية', 'العربية'];
+  NOISE.forEach(w => { t = t.replace(new RegExp(w, 'g'), ''); });
 
-  // Convert Arabic-Indic digits to Western digits
-  t = t.replace(/[٠-٩]/g, d => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)));
+  // استخراج الحروف العربية فقط (أهم جزء)
+  const arLetters = t.match(/[أبتثجحخدذرزسشصضطظعغفقكلمنهوي]/g) || [];
+  // استخراج الأرقام فقط
+  const digits = t.match(/\d+/g) || [];
 
-  // ── Remove known noise words that appear on Egyptian plates ──
-  // "مصر" (Egypt label on blue strip), governorate codes, etc.
-  const NOISE_WORDS = ['مصر', 'مصر.', 'Egypt', 'EGYPT', 'جمهورية', 'العربية'];
-  NOISE_WORDS.forEach(w => {
-    t = t.replace(new RegExp(w, 'g'), ' ');
-  });
-  t = t.replace(/\s+/g, ' ').trim();
+  const finalLetters = arLetters.join(' ');
+  const finalDigits = digits.join('');
 
-  // ── Extract Arabic letters (exclude noise chars) ──
-  // Egyptian plates use: أ ب ت ث ج ح خ د ذ ر ز س ش ص ض ط ظ ع غ ف ق ك ل م ن ه و ي
-  const VALID_AR = /[أبتثجحخدذرزسشصضطظعغفقكلمنهوي]/g;
-  const arLetters = t.match(VALID_AR) || [];
-
-  // ── Extract digit groups ──
-  const digitGroups = t.match(/\d+/g) || [];
-  const digits = digitGroups.join('');
-
-  // ── Egyptian plate formats ──
-  // Modern: 3 letters + 4 digits  (e.g.  أ ب ج  ١٢٣٤)
-  // Old:    2 letters + 4 digits
-  // Private: 3-4 digits only (for some vehicles)
-  // Trim letters to max 3 and digits to max 4
-  const lettersStr = arLetters.slice(0, 3).join(' ');
-  const digitsStr  = digits.slice(0, 4);
-
-  if (lettersStr && digitsStr) return lettersStr + '  ' + digitsStr;
-  if (lettersStr && !digitsStr) return lettersStr;
-  if (!lettersStr && digitsStr) return digitsStr;
-
-  // Fallback: return cleaned raw (strip non-plate chars)
-  return t.replace(/[^أبتثجحخدذرزسشصضطظعغفقكلمنهوي0-9\s]/g, '').trim().substring(0, 15);
+  if (finalLetters || finalDigits) {
+      return (finalLetters + ' ' + finalDigits).trim();
+  }
+  return t.trim().substring(0, 15);
 }
 
 async function openPlateScanner() {
@@ -3127,7 +3120,7 @@ function captureAndOCR() {
   cctx.imageSmoothingQuality = 'high';
   cctx.drawImage(canvas, fx, fy, fw, fh, 0, 0, crop.width, crop.height);
 
-  preprocessForOCR(cctx, crop.width, crop.height);
+  //preprocessForOCR(cctx, crop.width, crop.height);
   runOCR(crop.toDataURL('image/png'));
 }
 
