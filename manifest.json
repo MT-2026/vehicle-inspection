@@ -2,12 +2,16 @@
   "id": "vehicle-inspection-pwa",
   "name": "Vehicle Inspection App",
   "short_name": "VehicleApp",
-  "description": "App for vehicle inspection and management",
-  "start_url": "index.html",
+  "description": "Professional application for vehicle inspection and management",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#ffffff",
   "theme_color": "#000000",
+  "categories": ["business", "utilities"],
   "icons": [
     {
       "src": "icon.png",
