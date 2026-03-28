@@ -1,0 +1,3288 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a1628">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="فحص المركبات">
+<meta name="apple-mobile-web-app-title" content="فحص المركبات">
+<meta name="msapplication-TileColor" content="#0a1628">
+<link rel="apple-touch-icon" href="https://i.postimg.cc/5tcH9ZMQ/aykwnt-khlatt-asmnt.png">
+<link rel="icon" type="image/png" href="https://i.postimg.cc/5tcH9ZMQ/aykwnt-khlatt-asmnt.png">
+<title>فحص المركبات</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet" onerror="this.remove()">
+<style>
+/* Offline fallback fonts */
+body { font-family: 'Cairo', 'Tajawal', 'Arial', 'Tahoma', sans-serif !important; }
+</style>
+<!-- Tesseract.js v4 — stable API, works in sandboxed iframes & mobile -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.4/dist/tesseract.min.js"></script>
+<style>
+:root {
+  --bg-deep: #060d1a;
+  --bg-card: #0d1e35;
+  --bg-card2: #122440;
+  --accent: #f5a623;
+  --accent2: #e8891a;
+  --accent-glow: rgba(245,166,35,0.2);
+  --blue: #1a7fc4;
+  --blue-light: #2596e8;
+  --green: #27ae60;
+  --red: #e74c3c;
+  --text: #e8edf5;
+  --text-muted: #7a8fa8;
+  --border: rgba(255,255,255,0.08);
+  --border-accent: rgba(245,166,35,0.3);
+  --radius: 14px;
+  --shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: 'Cairo', 'Tajawal', sans-serif;
+  background: var(--bg-deep);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  direction: rtl;
+}
+
+/* Background texture */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: 
+    radial-gradient(ellipse at 20% 20%, rgba(26,127,196,0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(245,166,35,0.06) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ===== HEADER ===== */
+.app-header {
+  background: linear-gradient(135deg, #0d1e35 0%, #122440 100%);
+  border-bottom: 1px solid var(--border-accent);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 20px rgba(0,0,0,0.5);
+}
+
+.logo-icon {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 15px var(--accent-glow);
+}
+
+.header-text h1 {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.2;
+}
+.header-text p {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.step-indicator {
+  margin-right: auto;
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.step-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: all 0.3s;
+}
+.step-dot.active { background: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
+.step-dot.done { background: var(--green); }
+
+/* ===== MAIN CONTENT ===== */
+.main {
+  padding: 20px 16px 100px;
+  max-width: 600px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== SCREEN ===== */
+.screen {
+  display: none;
+  animation: fadeSlide 0.4s ease;
+}
+.screen.active { display: block; }
+
+@keyframes fadeSlide {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== CARD ===== */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow);
+}
+
+.card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-title::before {
+  content: '';
+  width: 3px;
+  height: 18px;
+  background: var(--accent);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* ===== SCREEN TITLE ===== */
+.screen-title {
+  text-align: center;
+  margin-bottom: 28px;
+}
+.screen-title h2 {
+  font-size: 24px;
+  font-weight: 900;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.screen-title p {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* ===== VEHICLE TYPE GRID ===== */
+.vehicle-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.vehicle-btn {
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.vehicle-btn:hover, .vehicle-btn:active {
+  border-color: var(--accent);
+  background: var(--bg-card2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px var(--accent-glow);
+}
+
+.vehicle-btn .icon {
+  font-size: 36px;
+  line-height: 1;
+}
+
+.vehicle-btn .label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+/* ===== NUMBER SELECTOR ===== */
+.number-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.number-btn {
+  background: var(--bg-card2);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 6px;
+  text-align: center;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  transition: all 0.2s;
+  font-family: 'Cairo', monospace;
+}
+
+.number-btn:hover, .number-btn:active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #000;
+}
+
+/* ===== INPUT ===== */
+.form-group {
+  margin-bottom: 14px;
+}
+
+.form-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  display: block;
+}
+
+.form-input {
+  width: 100%;
+  background: var(--bg-deep);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: var(--text);
+  font-size: 14px;
+  font-family: 'Cairo', sans-serif;
+  direction: rtl;
+  transition: border-color 0.2s;
+  outline: none;
+}
+
+.form-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+/* ===== INSPECTION GROUPS ===== */
+.group-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+  overflow: hidden;
+  animation: fadeSlide 0.35s ease;
+}
+
+.group-header {
+  background: linear-gradient(135deg, var(--bg-card2), rgba(245,166,35,0.06));
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.group-num {
+  width: 28px;
+  height: 28px;
+  background: var(--accent);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: #000;
+  flex-shrink: 0;
+}
+
+.group-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.group-items {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ===== INSPECTION ITEM ===== */
+.inspect-item {
+  background: var(--bg-deep);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.inspect-item.selected {
+  border-color: var(--red);
+  background: rgba(231,76,60,0.08);
+}
+
+.inspect-item.ok {
+  border-color: var(--green);
+  background: rgba(39,174,96,0.08);
+}
+
+.item-check {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 2px solid var(--border);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  transition: all 0.2s;
+  background: var(--bg-card);
+}
+
+.inspect-item.selected .item-check {
+  background: var(--red);
+  border-color: var(--red);
+}
+
+.inspect-item.ok .item-check {
+  background: var(--green);
+  border-color: var(--green);
+}
+
+.item-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  flex: 1;
+  line-height: 1.4;
+}
+
+.status-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+
+.status-badge.issue { background: rgba(231,76,60,0.2); color: var(--red); }
+.status-badge.good { background: rgba(39,174,96,0.2); color: var(--green); }
+
+/* ===== ITEM TOGGLE STATES ===== */
+/* Three states: unset → issue → ok → unset */
+
+/* ===== GROUP RESULT ===== */
+.group-result {
+  margin: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.group-result.has-issues {
+  background: rgba(231,76,60,0.12);
+  border: 1px solid rgba(231,76,60,0.3);
+  color: #ff8080;
+}
+
+.group-result.all-ok {
+  background: rgba(39,174,96,0.12);
+  border: 1px solid rgba(39,174,96,0.3);
+  color: #6fd98e;
+}
+
+/* ===== NEXT GROUP BUTTON ===== */
+.next-group-btn {
+  margin: 0 12px 12px;
+  width: calc(100% - 24px);
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: 10px;
+  padding: 13px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: 'Cairo', sans-serif;
+  transition: all 0.2s;
+}
+
+.next-group-btn:hover { background: var(--accent2); transform: translateY(-1px); }
+.next-group-btn:disabled { opacity: 0.5; cursor: default; }
+
+/* ===== LEGEND ===== */
+.legend {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  background: var(--bg-card2);
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+/* ===== BUTTONS ===== */
+.btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: 'Cairo', sans-serif;
+  transition: all 0.25s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #000;
+  box-shadow: 0 4px 20px var(--accent-glow);
+}
+
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px var(--accent-glow); }
+
+.btn-secondary {
+  background: var(--bg-card2);
+  border: 1.5px solid var(--border);
+  color: var(--text);
+}
+
+.btn-danger {
+  background: rgba(231,76,60,0.15);
+  border: 1.5px solid rgba(231,76,60,0.4);
+  color: var(--red);
+}
+
+.btn-green {
+  background: linear-gradient(135deg, #27ae60, #1e8449);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(39,174,96,0.3);
+}
+
+/* ===== BACK BUTTON ===== */
+.back-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 20px;
+  font-family: 'Cairo', sans-serif;
+  padding: 6px 0;
+}
+
+/* ===== PROGRESS BAR ===== */
+.progress-wrap {
+  margin-bottom: 20px;
+}
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+.progress-bar {
+  height: 6px;
+  background: var(--bg-card2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--blue), var(--accent));
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+/* ===== ATTACHMENTS ===== */
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.photo-thumb {
+  aspect-ratio: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  background: var(--bg-deep);
+  border: 1.5px solid var(--border);
+}
+
+.photo-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-thumb .remove-photo {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 22px;
+  height: 22px;
+  background: rgba(231,76,60,0.9);
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-area {
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.upload-area:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ===== SIGNATURE TABS ===== */
+.sig-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+  background: var(--bg-deep);
+  padding: 4px;
+  border-radius: 10px;
+}
+
+.sig-tab {
+  flex: 1;
+  padding: 9px 6px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Cairo', sans-serif;
+  transition: all 0.2s;
+}
+
+.sig-tab.active {
+  background: var(--accent);
+  color: #000;
+}
+
+.sig-tab-panel { display: none; }
+.sig-tab-panel.active { display: block; }
+
+.sig-font-btn {
+  padding: 6px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-deep);
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.sig-font-btn.active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ===== IMAGE LIGHTBOX ===== */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.92);
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: overlayIn 0.2s ease;
+  cursor: zoom-out;
+}
+
+.lightbox img {
+  max-width: 95vw;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 10px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.7);
+  animation: lbIn 0.25s cubic-bezier(0.34,1.4,0.64,1);
+}
+
+@keyframes lbIn {
+  from { transform: scale(0.85); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.lightbox-close {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  width: 38px;
+  height: 38px;
+  background: rgba(255,255,255,0.15);
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9001;
+  backdrop-filter: blur(4px);
+}
+
+/* Clickable photo thumbs */
+.photo-thumb img { cursor: zoom-in; }
+
+
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  background: #fff;
+}
+
+#signatureCanvas {
+  display: block;
+  width: 100%;
+  height: 160px;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.clear-sig-btn {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: rgba(231,76,60,0.85);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 12px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-family: 'Cairo', sans-serif;
+}
+
+.sig-hint {
+  text-align: center;
+  font-size: 12px;
+  color: #999;
+  margin-top: 6px;
+}
+
+/* ===== POPUP / MODAL ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  backdrop-filter: blur(4px);
+  animation: overlayIn 0.25s ease;
+}
+
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-sheet {
+  background: var(--bg-card);
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 20px;
+  animation: sheetUp 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+@keyframes sheetUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.modal-handle {
+  width: 40px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 0 auto 20px;
+}
+
+.modal-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+/* ===== REPORT ===== */
+.report-preview {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.report-header-block {
+  text-align: center;
+  border-bottom: 2px solid var(--accent);
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+}
+
+.report-header-block h2 {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--accent);
+}
+
+.report-header-block p {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.report-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.report-info-item {
+  background: var(--bg-deep);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.report-info-item .lbl {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 3px;
+}
+
+.report-info-item .val {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.report-section-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--accent);
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-accent);
+  margin: 16px 0 10px;
+}
+
+.report-issue-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.issue-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--red);
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.ok-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.report-photos {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.report-photos img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.report-sig-img {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  max-width: 200px;
+  margin: 0 auto;
+  display: block;
+}
+
+/* ===== BOTTOM ACTIONS ===== */
+.bottom-actions {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px 16px;
+  background: linear-gradient(to top, var(--bg-deep) 80%, transparent);
+  display: flex;
+  gap: 10px;
+  z-index: 50;
+}
+
+/* ===== SUMMARY BADGE ===== */
+.summary-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.badge-issues { background: rgba(231,76,60,0.15); color: var(--red); border: 1px solid rgba(231,76,60,0.3); }
+.badge-ok { background: rgba(39,174,96,0.15); color: var(--green); border: 1px solid rgba(39,174,96,0.3); }
+
+/* ===== PLATE SCANNER ===== */
+.plate-scan-overlay {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 5000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.plate-scan-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 16px 20px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 10;
+}
+
+.plate-scan-title {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+  font-family: 'Cairo', sans-serif;
+}
+
+.plate-scan-close {
+  background: rgba(255,255,255,0.15);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#plateVideo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.plate-frame-wrap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.plate-frame {
+  width: min(85vw, 360px);
+  height: min(22vw, 100px);
+  border: 3px solid var(--accent);
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 3000px rgba(0,0,0,0.55),
+    0 0 20px var(--accent-glow),
+    inset 0 0 10px rgba(245,166,35,0.1);
+  position: relative;
+}
+
+.plate-frame::before,
+.plate-frame::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-color: #fff;
+  border-style: solid;
+}
+.plate-frame::before { top: -3px; right: -3px; border-width: 3px 3px 0 0; border-radius: 0 6px 0 0; }
+.plate-frame::after  { bottom: -3px; left: -3px; border-width: 0 0 3px 3px; border-radius: 0 0 0 6px; }
+
+.plate-scan-line {
+  position: absolute;
+  left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  animation: scanLine 2s ease-in-out infinite;
+  box-shadow: 0 0 8px var(--accent);
+}
+
+@keyframes scanLine {
+  0%   { top: 0; opacity: 1; }
+  45%  { top: calc(100% - 2px); opacity: 1; }
+  50%  { top: calc(100% - 2px); opacity: 0; }
+  55%  { top: 0; opacity: 0; }
+  60%  { top: 0; opacity: 1; }
+  100% { top: calc(100% - 2px); opacity: 1; }
+}
+
+.plate-hint {
+  position: absolute;
+  bottom: 30%;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255,255,255,0.8);
+  font-size: 13px;
+  font-family: 'Cairo', sans-serif;
+  text-align: center;
+  white-space: nowrap;
+  background: rgba(0,0,0,0.5);
+  padding: 6px 16px;
+  border-radius: 20px;
+  backdrop-filter: blur(4px);
+}
+
+.plate-actions {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  z-index: 10;
+}
+
+.plate-capture-btn {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: #fff;
+  border: 4px solid var(--accent);
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4), 0 0 20px var(--accent-glow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  transition: all 0.15s;
+}
+.plate-capture-btn:active { transform: scale(0.92); }
+
+.plate-gallery-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.15);
+  border: 1.5px solid rgba(255,255,255,0.3);
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: #fff;
+}
+
+/* OCR Processing overlay */
+.ocr-processing {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  z-index: 20;
+}
+
+.ocr-spinner {
+  width: 50px;
+  height: 50px;
+  border: 3px solid rgba(245,166,35,0.2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.ocr-msg {
+  color: #fff;
+  font-family: 'Cairo', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* OCR Result sheet */
+.ocr-result-sheet {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg-card);
+  border-radius: 20px 20px 0 0;
+  padding: 20px;
+  z-index: 25;
+  animation: sheetUp 0.3s cubic-bezier(0.34,1.4,0.64,1);
+}
+
+.ocr-plate-display {
+  background: #fff;
+  border: 3px solid #1a3a6c;
+  border-radius: 10px;
+  padding: 10px 20px;
+  text-align: center;
+  margin: 12px 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.ocr-plate-display::before {
+  content: 'مصر';
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #1a3a6c;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 4px;
+  border-radius: 3px;
+  writing-mode: vertical-rl;
+  font-family: 'Cairo', sans-serif;
+}
+
+.ocr-plate-text {
+  font-size: 28px;
+  font-weight: 900;
+  color: #1a1a2e;
+  letter-spacing: 3px;
+  font-family: 'Cairo', monospace;
+  direction: ltr;
+}
+
+.ocr-plate-input {
+  width: 100%;
+  background: var(--bg-deep);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 700;
+  font-family: 'Cairo', sans-serif;
+  text-align: center;
+  letter-spacing: 2px;
+  direction: ltr;
+  margin: 8px 0 14px;
+}
+
+.ocr-plate-input:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+/* Plate scan button in form */
+.plate-scan-trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, rgba(245,166,35,0.1), rgba(245,166,35,0.05));
+  border: 1.5px dashed var(--accent);
+  border-radius: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  width: 100%;
+  color: var(--accent);
+  font-family: 'Cairo', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  transition: all 0.2s;
+  margin-top: 4px;
+}
+.plate-scan-trigger:hover { background: rgba(245,166,35,0.15); }
+.plate-scan-trigger .icon { font-size: 22px; flex-shrink: 0; }
+
+#plateGalleryInput { display: none; }
+#plateCaptureCanvas { display: none; }
+
+
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ===== DATETIME DISPLAY ===== */
+.datetime-pill {
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 8px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+
+.datetime-pill span { color: var(--text); font-weight: 700; }
+
+/* ===== NOTIFICATION TOAST ===== */
+.toast {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-card2);
+  border: 1px solid var(--border-accent);
+  border-radius: 20px;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  z-index: 2000;
+  box-shadow: var(--shadow);
+  animation: toastIn 0.3s ease;
+  white-space: nowrap;
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* ===== ALL DONE / COMPLETE GROUP INDICATOR ===== */
+.group-done-indicator {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  width: 20px;
+  height: 20px;
+  background: var(--green);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+}
+
+.group-header { position: relative; }
+
+/* ===== ITEM NOTE INPUT ===== */
+.item-note-input {
+  background: rgba(245,166,35,0.06) !important;
+  border-color: rgba(245,166,35,0.55) !important;
+  border-width: 2px !important;
+  border-style: dashed !important;
+  border-radius: 10px !important;
+  color: var(--text) !important;
+  font-size: 13px !important;
+  padding: 10px 14px !important;
+  margin-top: 6px !important;
+  width: 100% !important;
+}
+.item-note-input::placeholder {
+  color: rgba(245,166,35,0.6) !important;
+  font-style: italic;
+}
+.item-note-input:focus {
+  border-color: var(--accent) !important;
+  border-style: solid !important;
+  box-shadow: 0 0 0 3px rgba(245,166,35,0.15) !important;
+  outline: none !important;
+}
+.other-fault-section {
+  margin-top: 10px;
+  padding: 10px 4px 4px;
+  border-top: 1px solid var(--border);
+}
+.other-fault-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+</style>
+</head>
+<body>
+
+<!-- App Header -->
+<header class="app-header" id="appHeader">
+  <div class="logo-icon">🚛</div>
+  <div class="header-text">
+    <h1>فحص المركبات</h1>
+    <p>نظام الفحص الميداني</p>
+  </div>
+  <div class="step-indicator" id="stepIndicator">
+    <div class="step-dot active" id="dot1"></div>
+    <div class="step-dot" id="dot2"></div>
+    <div class="step-dot" id="dot3"></div>
+    <div class="step-dot" id="dot4"></div>
+    <div class="step-dot" id="dot5"></div>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- ===== SCREEN 1: Vehicle Type ===== -->
+  <div class="screen active" id="screen1">
+    <div class="screen-title">
+      <h2>نوع المركبة</h2>
+      <p>اختر نوع المركبة المراد فحصها</p>
+    </div>
+    <div class="vehicle-grid">
+      <div class="vehicle-btn" onclick="selectVehicleType('خلاطة خرسانة')">
+        <div class="icon">🚛</div>
+        <div class="label">خلاطة خرسانة</div>
+      </div>
+      <div class="vehicle-btn" onclick="selectVehicleType('مضخة خرسانة')">
+        <div class="icon">🏗️</div>
+        <div class="label">مضخة خرسانة</div>
+      </div>
+      <div class="vehicle-btn" onclick="selectVehicleType('سيارة خدمات بيك أب')">
+        <div class="icon">🚐</div>
+        <div class="label">بيك أب</div>
+      </div>
+      <div class="vehicle-btn" onclick="selectVehicleType('سيارة خدمات دوبل')">
+        <div class="icon">🚙</div>
+        <div class="label">دوبل</div>
+      </div>
+      <div class="vehicle-btn" onclick="selectVehicleType('مينى باص')" style="grid-column: span 2;">
+        <div class="icon">🚌</div>
+        <div class="label">مينى باص</div>
+      </div>
+      <div class="vehicle-btn" onclick="selectVehicleType('لودر')" style="grid-column: span 2;">
+        <div class="icon">🚜</div>
+        <div class="label">لودر</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SCREEN 2: Vehicle Number ===== -->
+  <div class="screen" id="screen2">
+    <button class="back-btn no-print" onclick="goBack(2)">← رجوع</button>
+    <div class="screen-title">
+      <h2 id="s2VehicleType">اختر الرقم</h2>
+      <p>اختر رقم المركبة</p>
+    </div>
+    <div class="card">
+      <div class="card-title">رقم المركبة</div>
+      <div class="number-grid" id="numberGrid"></div>
+    </div>
+  </div>
+
+  <!-- ===== SCREEN 3: Driver Info ===== -->
+  <div class="screen" id="screen3">
+    <button class="back-btn no-print" onclick="goBack(3)">← رجوع</button>
+    <div class="screen-title">
+      <h2>بيانات المركبة</h2>
+      <p id="s3Subtitle">أدخل بيانات السائقين</p>
+    </div>
+    <div class="card">
+      <div class="card-title">معلومات المركبة</div>
+      <div class="report-info-grid" style="margin-bottom: 12px;">
+        <div class="report-info-item">
+          <div class="lbl">نوع المركبة</div>
+          <div class="val" id="s3VehicleType">—</div>
+        </div>
+        <div class="report-info-item" id="s3VehicleNumRow">
+          <div class="lbl">رقم المركبة</div>
+          <div class="val" id="s3VehicleNum">—</div>
+        </div>
+      </div>
+      <div class="form-group" id="plateNumberGroup" style="margin-bottom:0;">
+        <label class="form-label">رقم لوحة المركبة</label>
+        <input type="text" class="form-input" id="plateNumber" placeholder="مثال: أ ب ج ١٢٣٤" style="letter-spacing:2px;text-align:center;font-size:16px;font-weight:700;" oninput="this.value=this.value.toUpperCase()">
+        <button class="plate-scan-trigger" onclick="openPlateScanner()">
+          <span class="icon">📷</span>
+          <span>مسح لوحة المركبة بالكاميرا</span>
+          <span style="margin-right:auto;font-size:11px;opacity:0.7;">OCR تلقائي</span>
+        </button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">بيانات السائقين</div>
+      <div class="form-group">
+        <label class="form-label">اسم سائق الوردية النهارية</label>
+        <input type="text" class="form-input" id="dayDriver" placeholder="أدخل اسم سائق الوردية النهارية">
+      </div>
+      <div class="form-group" id="nightDriverGroup">
+        <label class="form-label">اسم سائق الوردية الليلية</label>
+        <input type="text" class="form-input" id="nightDriver" placeholder="أدخل اسم سائق الوردية الليلية">
+      </div>
+    </div>
+    <!-- Pump-only fields -->
+    <div class="card" id="pumpFields" style="display:none;">
+      <div class="card-title">بيانات المشغلين (المضخة)</div>
+      <div class="form-group">
+        <label class="form-label">مشغل النهار</label>
+        <input type="text" class="form-input" id="dayOperator" placeholder="أدخل اسم مشغل النهار">
+      </div>
+      <div class="form-group">
+        <label class="form-label">مشغل الليل</label>
+        <input type="text" class="form-input" id="nightOperator" placeholder="أدخل اسم مشغل الليل">
+      </div>
+    </div>
+
+    <!-- Loader-only fields -->
+    <div class="card" id="loaderFields" style="display:none;">
+      <div class="card-title">بيانات اللودر</div>
+      <div class="form-group">
+        <label class="form-label">موديل اللودر</label>
+        <input type="text" class="form-input" id="loaderModel" placeholder="مثال: Komatsu WA380 / CAT 950 ...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">نوع شفرة اللودر</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;">
+          <label style="display:flex;align-items:center;gap:10px;background:var(--bg-deep);border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;transition:all 0.2s;" id="bladeTypeShafra">
+            <input type="radio" name="bladeType" value="شفرة" style="width:18px;height:18px;accent-color:var(--accent);" onchange="selectBladeType(this)">
+            <span style="font-size:14px;font-weight:700;">🔧 شفرة</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;background:var(--bg-deep);border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;transition:all 0.2s;" id="bladeTypeZwafir">
+            <input type="radio" name="bladeType" value="ضوافر" style="width:18px;height:18px;accent-color:var(--accent);" onchange="selectBladeType(this)">
+            <span style="font-size:14px;font-weight:700;">⚙️ ضوافر</span>
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-actions no-print">
+      <button class="btn btn-primary" onclick="goToInspection()">بدء الفحص ←</button>
+    </div>
+  </div>
+
+  <!-- ===== SCREEN 4: Inspection ===== -->
+  <div class="screen" id="screen4">
+    <button class="back-btn no-print" onclick="goBack(4)">← رجوع</button>
+    <div class="screen-title" style="margin-bottom:14px;">
+      <h2>الفحص الميداني</h2>
+      <p id="s4Subtitle">اختر الحالة لكل بند</p>
+    </div>
+    <div class="progress-wrap no-print">
+      <div class="progress-label">
+        <span>التقدم</span>
+        <span id="progressText">0%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width:0%"></div>
+      </div>
+    </div>
+    <div class="legend no-print">
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--red)"></div>
+        <span>مشكلة (اضغط مرة)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--green)"></div>
+        <span>سليم (اضغط مرتين)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--border)"></div>
+        <span>غير محدد</span>
+      </div>
+    </div>
+    <div id="inspectionGroups"></div>
+    <div id="inspectionComplete" style="display:none;">
+      <div class="card" style="text-align:center; padding: 30px 20px;">
+        <div style="font-size:48px; margin-bottom:12px;">✅</div>
+        <div style="font-size:18px; font-weight:800; color:var(--green); margin-bottom:8px;">اكتمل الفحص</div>
+        <div style="font-size:13px; color:var(--text-muted);">تم فحص جميع البنود بنجاح</div>
+      </div>
+    </div>
+    <div class="bottom-actions no-print" id="inspectActions" style="display:none;">
+      <button class="btn btn-green" onclick="goToAttachments()">المرفقات والتقرير ←</button>
+    </div>
+  </div>
+
+  <!-- ===== SCREEN 5: Attachments & Signature ===== -->
+  <div class="screen" id="screen5">
+    <button class="back-btn no-print" onclick="goBack(5)">← رجوع</button>
+    <div class="screen-title">
+      <h2>المرفقات والتوقيع</h2>
+      <p>أضف الصور والتوقيع (اختياري)</p>
+    </div>
+    <div class="datetime-pill" id="datetimePill">
+      التاريخ والوقت: <span id="currentDatetime">—</span>
+    </div>
+    <div class="card">
+      <div class="card-title">الصور (اختياري)</div>
+      <input type="file" id="photoInput" accept="image/*" multiple style="display:none;" onchange="handlePhotos(event)">
+      <div class="upload-area" onclick="document.getElementById('photoInput').click()">
+        📷 اضغط لإضافة صور
+      </div>
+      <div class="photo-grid" id="photoGrid"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">التوقيع</div>
+      <!-- Signature Tabs -->
+      <div class="sig-tabs">
+        <button class="sig-tab active" onclick="switchSigTab('draw', this)">✍️ رسم</button>
+        <button class="sig-tab" onclick="switchSigTab('upload', this)">📁 ملف/صورة</button>
+        <button class="sig-tab" onclick="switchSigTab('type', this)">⌨️ كتابة</button>
+      </div>
+
+      <!-- Draw Tab -->
+      <div class="sig-tab-panel active" id="sigTabDraw">
+        <div class="signature-wrap">
+          <canvas id="signatureCanvas" width="600" height="160"></canvas>
+          <button class="clear-sig-btn" onclick="clearSignature()">مسح</button>
+        </div>
+        <div class="sig-hint">وقّع بإصبعك أو بالفأرة</div>
+      </div>
+
+      <!-- Upload Tab -->
+      <div class="sig-tab-panel" id="sigTabUpload">
+        <input type="file" id="sigFileInput" accept="image/*,.pdf" style="display:none;" onchange="handleSigFile(event)">
+        <div class="upload-area" style="margin-bottom:10px;" onclick="document.getElementById('sigFileInput').click()">
+          📁 اضغط لرفع صورة التوقيع أو ملف PDF
+        </div>
+        <div id="sigUploadPreview" style="display:none;text-align:center;">
+          <img id="sigUploadImg" src="" alt="توقيع مرفوع" style="max-width:100%;max-height:160px;border-radius:10px;border:1.5px solid var(--border);">
+          <button class="clear-sig-btn" style="position:static;display:inline-block;margin-top:8px;" onclick="clearSigUpload()">إزالة الصورة</button>
+        </div>
+      </div>
+
+      <!-- Type Tab -->
+      <div class="sig-tab-panel" id="sigTabType">
+        <div class="form-group" style="margin-bottom:8px;">
+          <input type="text" class="form-input" id="sigTypeInput" placeholder="اكتب اسمك كتوقيع..." oninput="renderTypedSig()" style="font-size:18px;font-weight:700;">
+        </div>
+        <div id="sigTypedFontRow" style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+          <button class="sig-font-btn active" data-font="'Cairo', sans-serif" onclick="selectSigFont(this)">كايرو</button>
+          <button class="sig-font-btn" data-font="'Tajawal', sans-serif" onclick="selectSigFont(this)">تجوال</button>
+          <button class="sig-font-btn" data-font="cursive" onclick="selectSigFont(this)" style="font-family:cursive">Cursive</button>
+          <button class="sig-font-btn" data-font="'Courier New', monospace" onclick="selectSigFont(this)" style="font-family:'Courier New'">Mono</button>
+        </div>
+        <canvas id="sigTypeCanvas" width="600" height="120" style="width:100%;height:120px;background:#fff;border-radius:10px;border:1.5px solid var(--border);display:block;"></canvas>
+        <div class="sig-hint">سيظهر الاسم كتوقيع في التقرير</div>
+      </div>
+    </div>
+    <div class="bottom-actions no-print">
+      <button class="btn btn-primary" onclick="generateReport()">عرض التقرير النهائي ←</button>
+    </div>
+  </div>
+
+  <!-- ===== SCREEN 6: Report ===== -->
+  <div class="screen" id="screen6">
+    <div class="screen-title no-print">
+      <h2>التقرير النهائي</h2>
+    </div>
+
+    <!-- Print version (A4) -->
+    <div class="print-page" id="printContent">
+      <div class="print-title">تقرير فحص المركبة</div>
+      <div class="print-info-grid" id="printInfoGrid"></div>
+      <div id="printResults"></div>
+      <div id="printPhotosSection"></div>
+      <div id="printSignatureSection"></div>
+    </div>
+
+    <!-- Screen preview -->
+    <div class="report-preview no-print" id="reportPreview"></div>
+
+    <div class="bottom-actions no-print" style="flex-wrap:wrap;gap:8px;">
+      <button class="btn btn-primary" style="flex:1;min-width:90px;" onclick="doPrint()">🖨️ طباعة</button>
+      <button class="btn btn-green" style="flex:1;min-width:90px;" onclick="savePDF()">📄 PDF</button>
+      <button class="btn btn-secondary" style="flex:1;min-width:120px;font-weight:800;" onclick="resetAll()">🔍 فحص جديد</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- PLATE SCANNER OVERLAY -->
+<div id="plateScanOverlay" class="plate-scan-overlay" style="display:none;">
+  <div class="plate-scan-header">
+    <div class="plate-scan-title">📷 مسح لوحة المركبة</div>
+    <button class="plate-scan-close" onclick="closePlateScanner()">✕</button>
+  </div>
+
+  <video id="plateVideo" autoplay playsinline muted></video>
+
+  <div class="plate-frame-wrap">
+    <div class="plate-frame">
+      <div class="plate-scan-line"></div>
+    </div>
+  </div>
+
+  <div class="plate-hint">وجّه الكاميرا نحو لوحة المركبة</div>
+
+  <div class="plate-actions">
+    <label class="plate-gallery-btn" for="plateGalleryInput" title="اختر من المعرض">🖼️</label>
+    <button class="plate-capture-btn" onclick="captureAndOCR()" title="التقاط">📷</button>
+    <button class="plate-gallery-btn" onclick="switchCamera()" title="قلب الكاميرا">🔄</button>
+  </div>
+
+  <!-- hidden inputs/canvas -->
+  <input type="file" id="plateGalleryInput" accept="image/*" onchange="processGalleryImage(event)">
+  <canvas id="plateCaptureCanvas"></canvas>
+
+  <!-- OCR Processing -->
+  <div class="ocr-processing" id="ocrProcessing" style="display:none;">
+    <div class="ocr-spinner"></div>
+    <div class="ocr-msg" id="ocrMsg">جارٍ تحليل اللوحة...</div>
+  </div>
+
+  <!-- OCR Result -->
+  <div class="ocr-result-sheet" id="ocrResultSheet" style="display:none;">
+    <div class="modal-handle"></div>
+    <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:12px;text-align:center;">نتيجة القراءة</div>
+    <div class="ocr-plate-display">
+      <div class="ocr-plate-text" id="ocrPlateDisplay">—</div>
+    </div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;text-align:center;">عدّل إذا لزم الأمر</div>
+    <input type="text" class="ocr-plate-input" id="ocrPlateEdit" placeholder="رقم اللوحة" oninput="document.getElementById('ocrPlateDisplay').textContent=this.value||'—'">
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-primary" style="flex:1" onclick="confirmPlate()">✅ تأكيد</button>
+      <button class="btn btn-secondary" style="flex:0 0 auto;width:50px;" onclick="retakeScan()">🔄</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL OVERLAY -->
+<div class="modal-overlay" id="modalOverlay" style="display:none;" onclick="closeModal(event)">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modalTitle">—</div>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+  vehicleType: null,
+  vehicleNumber: null,
+  plateNumber: '',
+  dayDriver: '',
+  nightDriver: '',
+  dayOperator: '',
+  nightOperator: '',
+  loaderModel: '',
+  bladeType: '',
+  inspectionData: {},
+  itemNotes: {},
+  groupNotes: {},
+  otherFaults: {},
+  photos: [],
+  signature: null,
+  datetime: null,
+  currentGroupIndex: 0
+};
+
+// ============================================================
+// INSPECTION DATA
+// ============================================================
+const INSPECTIONS = {
+  'خلاطة خرسانة': [
+    {
+      title: 'أولاً: الإضاءة',
+      items: [
+        'الإضاءة الأمامية المنخفضة','الإضاءة الأمامية العالية',
+        'الإضاءة الخلفية الحمراء','إضاءة الإشارات اليمنى',
+        'إضاءة الإشارات اليسرى','إضاءة إشارة الإنتظار',
+        'إضاءة الرجوع للخلف','الإضاءة الداخلية لمقصورة المركبة'
+      ]
+    },
+    {
+      title: 'ثانياً: المحرك',
+      items: [
+        'الحاله العامه للمحرك','زيت المحرك',
+        'ناقل الحركة (الفتيس والغيارات)','زيت ناقل الحركة (زيت الفتيس)',
+        'الردياتير وسائل الردياتير','البطارية وكابلات البطارية',
+        'طلمبة باور الموتور (اللاسيه الأول)','طلمبة باور الفتيس (اللاسيه الثانى)',
+        'عداد السرعة-أمبير الجاز-أمبير الهواء','توحيد الأكسات','الإتشوك'
+      ]
+    },
+    {
+      title: 'ثالثاً: الفرامل والإطارات',
+      items: ['الفرامل وفرامل اليد','الحالة العامة للإطارات وضغط الهواء']
+    },
+    {
+      title: 'رابعاً: المرايات والزجاج',
+      items: [
+        'المرآة الجانبية يمين ويسار',
+        'الزجاج الأمامي والزجاج الخلفى',
+        'الزجاج الجانبي يمين ويسار'
+      ]
+    },
+    {
+      title: 'خامساً: وسائل الحماية',
+      items: [
+        'حزام أمان السائق وحزام أمان المرافق',
+        'مساحات الزجاج وطلمبة مياه المساحات',
+        'وجود عدد 2 طفاية حريق',
+        'حقيبة الإسعافات الأولية ومثلث التحذير',
+        'آله التنبيه وإنذار رجوع السيارة للخلف'
+      ]
+    },
+    {
+      title: 'سادساً: الفحص الخارجي',
+      items: [
+        'الحالة العامة للمركبة','الملصق الإلكترونى',
+        'شاسية المركبة والعفشة والسوست',
+        'الجلب والموازين الأمامية والخلفية',
+        'حالة الطلاء للمركبة وحالة السمكرة',
+        'حالة اللوحة الرقمية',
+        'سلم الصعود للكابينة من الجهتين',
+        'مقعد السائق ومقعد مرافق السائق',
+        'بيان خزان المياه والأوكشه',
+        'طلمبة الماء / الأوكشة',
+        'وحدة وخزانات الهواء',
+        'أجزاء شاسية الحلة','تراك الحلة','بكرات تراك الحلة',
+        'أجزاء ناقل حركة الحلة (الهيدروليك)',
+        'زر تعشيق الحلة والتحكم في سرعة الحله',
+        'الجمل والسبعة والمزراب والبامبرز',
+        'سلم الخلاطة الخلفى والمنصة',
+        'خرطوم الماء الخلفى والعلوى'
+      ]
+    }
+  ],
+  'مضخة خرسانة': [
+    {
+      title: 'أولاً: الإضاءة',
+      items: [
+        'الإضاءة الأمامية المنخفضة','الإضاءة الأمامية العالية',
+        'الإضاءة الخلفية الحمراء','إضاءة الإشارات اليمنى',
+        'إضاءة الإشارات اليسرى','إضاءة إشارة الإنتظار',
+        'الإضاءة الداخلية لمقصورة المركبة','إضاءة الرجوع للخلف'
+      ]
+    },
+    {
+      title: 'ثانياً: المحرك',
+      items: [
+        'الحاله العامه للمحرك','زيت المحرك',
+        'ناقل الحركة (الفتيس والغيارات)','زيت ناقل الحركة (زيت الفتيس)',
+        'الردياتير وسائل الردياتير','البطارية وكابلات البطارية',
+        'طلمبة الباور','عداد السرعة-أمبير الجاز-أمبير الهواء',
+        'توحيد الأكسات','الإتشوك'
+      ]
+    },
+    {
+      title: 'ثالثاً: الفرامل والإطارات',
+      items: ['الفرامل وفرامل اليد','الحالة العامة للإطارات وضغط الهواء']
+    },
+    {
+      title: 'رابعاً: المرايات والزجاج',
+      items: [
+        'المرآة الجانبية يمين ويسار',
+        'الزجاج الأمامي والزجاج الخلفى',
+        'الزجاج الجانبي يمين ويسار'
+      ]
+    },
+    {
+      title: 'خامساً: وسائل الحماية',
+      items: [
+        'حزام أمان السائق وحزام أمان المرافق',
+        'مساحات الزجاج وطلمبة مياه المساحات',
+        'وجود عدد 2 طفاية حريق',
+        'حقيبة الإسعافات الأولية ومثلث التحذير',
+        'آله التنبيه وإنذار رجوع السيارة للخلف'
+      ]
+    },
+    {
+      title: 'سادساً: الفحص الخارجي',
+      items: [
+        'الحالة العامة للمركبة','الملصق الإلكترونى',
+        'أجزاء شاسيه المضخة والعفشة',
+        'الجلب والموازين الأمامية والخلفية',
+        'حالة الطلاء للمركبة وحالة السمكرة',
+        'حالة اللوحة الرقمية',
+        'سلم الصعود للكابينة من الجهتين',
+        'مقعد السائق ومقعد مرافق السائق',
+        'طلمبة الماء / وحدة وخزانات الهواء',
+        'تسريب زيت في وصلة #1','تسريب زيت في وصلة #2',
+        'تسريب زيت في وصلة #3','تسريب زيت في وصلة #4','تسريب زيت في وصلة #5',
+        'حالة الركائز','سلم المضخة الخلفى','مفتاح الطوارى',
+        'ليميت سويتش الهوبر','الريموت كنترول'
+      ]
+    }
+  ]
+};
+
+// Service vehicles share same structure
+const serviceVehicleData = [
+  {
+    title: 'أولاً: الإضاءة',
+    items: [
+      'الإضاءة الأمامية المنخفضة','الإضاءة الأمامية العالية',
+      'الإضاءة الخلفية الحمراء','إضاءة الإشارات اليمنى',
+      'إضاءة الإشارات اليسرى','إضاءة إشارة الإنتظار',
+      'الإضاءة الداخلية لمقصورة المركبة','إضاءة الرجوع للخلف'
+    ]
+  },
+  {
+    title: 'ثانياً: المحرك',
+    items: [
+      'الحاله العامه للمحرك','زيت المحرك',
+      'ناقل الحركة (الفتيس والغيارات)','زيت ناقل الحركة (زيت الفتيس)',
+      'الردياتير','سائل الردياتير',
+      'البطارية وكابلات البطارية والدفيرة',
+      'عداد السرعة','عداد السولار','عوامة السولار'
+    ]
+  },
+  {
+    title: 'ثالثاً: الفرامل',
+    items: ['الفرامل وزيت الفرامل','فرامل اليد']
+  },
+  {
+    title: 'رابعاً: الإطارات',
+    items: ['الحالة العامة للإطارات وضغط الهواء','الإطارات الإحتياطية (الإستبن)']
+  },
+  {
+    title: 'خامساً: المرايات والزجاج',
+    items: [
+      'المرآة الجانبية يمين','المرآة الجانبية يسار',
+      'الزجاج الأمامي','الزجاج الخلفى',
+      'الزجاج الجانبي يمين','الزجاج الجانبي يسار'
+    ]
+  },
+  {
+    title: 'سادساً: وسائل الحماية',
+    items: [
+      'حزام أمان السائق','حزام أمان المرافق',
+      'مساحات الزجاج','طلمبة مياه المساحات',
+      'وجود طفايات حريق','حقيبة الإسعافات الأولية',
+      'مثلث التحذير','آله التنبيه','إنذار رجوع السيارة للخلف'
+    ]
+  },
+  {
+    title: 'سابعاً: الفحص الخارجي',
+    items: [
+      'الحالة العامة للمركبة','الملصق الإلكترونى',
+      'شاسية المركبة والعفشة والسوست',
+      'حالة الطلاء للمركبة وحالة السمكرة',
+      'حالة اللوحة الرقمية',
+      'أبواب المركبة جهه اليمين','أبواب المركبة جهه اليسار',
+      'حالة المقاعد'
+    ]
+  }
+];
+
+INSPECTIONS['سيارة خدمات بيك أب'] = serviceVehicleData;
+INSPECTIONS['سيارة خدمات دوبل'] = serviceVehicleData;
+INSPECTIONS['مينى باص'] = serviceVehicleData;
+// Loader inspection data
+const loaderInspectionData = [
+  {
+    title: 'أولاً: وحدة الهيدروليك',
+    items: ['فحص المكابس','فحص الخراطيم','فحص الوصلات']
+  },
+  {
+    title: 'ثانياً: الإضاءة',
+    items: ['الإضاءة الأمامية','الإضاءة الخلفية','الإشارات الخلفية والأمامية','الفنار']
+  },
+  {
+    title: 'ثالثاً: الإطارات',
+    items: ['الحالة العامة للإطارات','مسامير العجل','ضغط الهواء داخل العجل']
+  },
+  {
+    title: 'رابعاً: الكابينة',
+    items: ['حزام الأمان','النظافة','كرسي السائق','دراع الأمان','الرافعات وأزرار التحكم','الدواسات','المكابح (الفرامل)','النوافذ والمساحات','درج السلم','وسائل المكافحة']
+  },
+  {
+    title: 'خامساً: الإشارات الصوتية',
+    items: ['سيرينة الرجوع للخلف','السيرينة (آلة التنبيه)']
+  },
+  {
+    title: 'سادساً: المرايات',
+    items: ['المرآة الداخلية','المرايات الجانبية']
+  },
+  {
+    title: 'سابعاً: أخرى',
+    items: [],
+    hasNote: true,
+    notePlaceholder: 'اكتب ما تم ملاحظته...'
+  }
+];
+INSPECTIONS['لودر'] = loaderInspectionData;
+
+
+// ============================================================
+// VEHICLE NUMBERS
+// ============================================================
+function getNumbers(type) {
+  if (type === 'خلاطة خرسانة') {
+    return Array.from({length: 84}, (_, i) => 'T' + String(i+1).padStart(2,'0'));
+  }
+  if (type === 'مضخة خرسانة') {
+    return Array.from({length: 20}, (_, i) => 'P' + String(i+1).padStart(2,'0'));
+  }
+  if (type === 'سيارة خدمات بيك أب' || type === 'سيارة خدمات دوبل') {
+    return Array.from({length: 20}, (_, i) => 'PK' + String(i+1).padStart(2,'0'));
+  }
+  if (type === 'مينى باص') {
+    return Array.from({length: 15}, (_, i) => 'B' + String(i+1).padStart(2,'0'));
+  }
+  if (type === 'لودر') {
+    return Array.from({length: 20}, (_, i) => 'L' + String(i+1).padStart(2,'0'));
+  }
+  return [];
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+let currentScreen = 1;
+const totalSteps = 5;
+
+function showScreen(n) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen' + n).classList.add('active');
+  currentScreen = n;
+  updateStepDots(n);
+  window.scrollTo(0, 0);
+}
+
+function updateStepDots(n) {
+  for (let i = 1; i <= totalSteps; i++) {
+    const dot = document.getElementById('dot' + i);
+    if (!dot) continue;
+    dot.classList.remove('active', 'done');
+    if (i < n) dot.classList.add('done');
+    else if (i === n) dot.classList.add('active');
+  }
+}
+
+function goBack(from) {
+  if (from === 2) showScreen(1);
+  else if (from === 3) showScreen(2);
+  else if (from === 4) showScreen(3);
+  else if (from === 5) showScreen(4);
+  else if (from === 6) showScreen(5);
+}
+
+// ============================================================
+// STEP 1: VEHICLE TYPE
+// ============================================================
+function selectVehicleType(type) {
+  state.vehicleType = type;
+
+  // Loader: no vehicle number needed — go straight to driver info
+  if (type === 'لودر') {
+    state.vehicleNumber = '—';
+    document.getElementById('s3VehicleType').textContent = type;
+    document.getElementById('s3VehicleNum').textContent  = '—';
+    document.getElementById('s3Subtitle').textContent    = type;
+    // Show loader fields, hide unneeded fields
+    document.getElementById('pumpFields').style.display       = 'none';
+    document.getElementById('loaderFields').style.display     = 'block';
+    document.getElementById('nightDriverGroup').style.display = 'none';
+    document.getElementById('plateNumberGroup').style.display = 'none';
+    document.getElementById('s3VehicleNumRow').style.display  = 'none';
+    showScreen(3);
+    return;
+  }
+
+  // All other types: show number picker
+  const nums = getNumbers(type);
+  const grid = document.getElementById('numberGrid');
+  grid.innerHTML = '';
+  nums.forEach(n => {
+    const btn = document.createElement('div');
+    btn.className   = 'number-btn';
+    btn.textContent = n;
+    btn.onclick     = () => selectVehicleNumber(n);
+    grid.appendChild(btn);
+  });
+  document.getElementById('s2VehicleType').textContent = type;
+  showScreen(2);
+}
+
+// ============================================================
+// STEP 2: VEHICLE NUMBER
+// ============================================================
+function selectVehicleNumber(num) {
+  state.vehicleNumber = num;
+  document.getElementById('s3VehicleType').textContent = state.vehicleType;
+  document.getElementById('s3VehicleNum').textContent = num;
+  document.getElementById('s3Subtitle').textContent = state.vehicleType;
+
+  const isLoader = state.vehicleType === 'لودر';
+  const isPump   = state.vehicleType === 'مضخة خرسانة';
+
+  // Pump fields
+  document.getElementById('pumpFields').style.display = isPump ? 'block' : 'none';
+
+  // Loader fields (model + blade type)
+  document.getElementById('loaderFields').style.display = isLoader ? 'block' : 'none';
+
+  // Hide night driver and plate scanner for loader
+  document.getElementById('nightDriverGroup').style.display  = isLoader ? 'none' : '';
+  document.getElementById('plateNumberGroup').style.display  = isLoader ? 'none' : '';
+
+  showScreen(3);
+}
+
+// ============================================================
+// STEP 3: DRIVER INFO → START INSPECTION
+// ============================================================
+function selectBladeType(radio) {
+  state.bladeType = radio.value;
+  // Visual feedback for selected blade type
+  ['bladeTypeShafra','bladeTypeZwafir'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.style.borderColor = el.querySelector('input').value === radio.value
+        ? 'var(--accent)' : 'var(--border)';
+      el.style.background = el.querySelector('input').value === radio.value
+        ? 'rgba(245,166,35,0.08)' : 'var(--bg-deep)';
+    }
+  });
+}
+
+function goToInspection() {
+  const isLoader = state.vehicleType === 'لودر';
+
+  state.plateNumber  = isLoader ? '' : (document.getElementById('plateNumber').value.trim());
+  state.dayDriver    = document.getElementById('dayDriver').value.trim();
+  state.nightDriver  = isLoader ? '' : (document.getElementById('nightDriver').value.trim());
+  state.dayOperator  = document.getElementById('dayOperator').value.trim();
+  state.nightOperator = document.getElementById('nightOperator').value.trim();
+  state.loaderModel  = isLoader ? (document.getElementById('loaderModel').value.trim()) : '';
+  state.bladeType    = isLoader ? state.bladeType : '';
+
+  if (!state.dayDriver) { showToast('⚠️ أدخل اسم سائق الوردية النهارية'); return; }
+  if (isLoader && !state.loaderModel) { showToast('⚠️ أدخل موديل اللودر'); return; }
+  if (isLoader && !state.bladeType)   { showToast('⚠️ اختر نوع شفرة اللودر'); return; }
+
+  // Init inspection data
+  const groups = INSPECTIONS[state.vehicleType];
+  state.inspectionData = {};
+  state.itemNotes = {};       // notes per item: key = gi+'_'+ii
+  state.groupNotes = {};      // free-text notes per group (for loader 'أخرى')
+  state.otherFaults = {};     // extra faults text per group
+  groups.forEach((g, gi) => {
+    state.inspectionData[gi] = {};
+    g.items.forEach((item, ii) => {
+      state.inspectionData[gi][ii] = 'unset';
+    });
+  });
+
+  state.currentGroupIndex = 0;
+  renderInspectionGroups();
+  showScreen(4);
+}
+
+// ============================================================
+// STEP 4: INSPECTION
+// ============================================================
+function renderInspectionGroups() {
+  const container = document.getElementById('inspectionGroups');
+  container.innerHTML = '';
+
+  const groups = INSPECTIONS[state.vehicleType];
+
+  groups.forEach((group, gi) => {
+    if (gi > state.currentGroupIndex) return;
+
+    const isActive = gi === state.currentGroupIndex;
+    const isDone   = gi < state.currentGroupIndex;
+
+    const groupDiv = document.createElement('div');
+    groupDiv.className = 'group-card';
+    groupDiv.id = 'groupCard' + gi;
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'group-header';
+    header.innerHTML = `
+      <div class="group-num">${gi + 1}</div>
+      <div class="group-title">${group.title}</div>
+      ${isDone ? '<div class="group-done-indicator">✓</div>' : ''}
+    `;
+    groupDiv.appendChild(header);
+
+    // Items
+    const itemsDiv = document.createElement('div');
+    itemsDiv.className = 'group-items';
+
+    // Special: hasNote group (loader "أخرى") — free text only
+    if (group.hasNote) {
+      const noteWrap = document.createElement('div');
+      noteWrap.style.cssText = 'padding:4px 0 8px;';
+      const ta = document.createElement('textarea');
+      ta.className = 'form-input';
+      ta.placeholder = group.notePlaceholder || 'اكتب ملاحظاتك هنا...';
+      ta.rows = 4;
+      ta.style.cssText = 'resize:vertical;min-height:90px;width:100%;';
+      ta.id = `groupNote_${gi}`;
+      ta.value = (state.groupNotes || {})[gi] || '';
+      if (isActive) {
+        ta.oninput = () => { if (!state.groupNotes) state.groupNotes = {}; state.groupNotes[gi] = ta.value; };
+      } else {
+        ta.disabled = true;
+        ta.style.opacity = '0.7';
+      }
+      noteWrap.appendChild(ta);
+      itemsDiv.appendChild(noteWrap);
+    } else {
+      // Normal items
+      group.items.forEach((item, ii) => {
+        const status  = (state.inspectionData[gi] || {})[ii] || 'unset';
+        const noteKey = gi + '_' + ii;
+        const noteVal = (state.itemNotes || {})[noteKey] || '';
+
+        const itemWrap = document.createElement('div');
+        itemWrap.style.cssText = 'margin-bottom:6px;';
+
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'inspect-item' + (status === 'issue' ? ' selected' : status === 'ok' ? ' ok' : '');
+        itemDiv.id = `item_${gi}_${ii}`;
+        itemDiv.innerHTML = `
+          <div class="item-check">${status === 'issue' ? '✕' : status === 'ok' ? '✓' : ''}</div>
+          <div class="item-text">${item}</div>
+          ${status !== 'unset' ? `<div class="status-badge ${status === 'issue' ? 'issue' : 'good'}">${status === 'issue' ? 'مشكلة' : 'سليم'}</div>` : ''}
+        `;
+
+        if (isActive) {
+          itemDiv.onclick = () => toggleItem(gi, ii);
+        } else {
+          itemDiv.style.opacity = '0.75';
+          itemDiv.style.cursor  = 'default';
+        }
+
+        itemWrap.appendChild(itemDiv);
+
+        // Note input — shown when status === 'issue'
+        if (status === 'issue' && isActive) {
+          const noteDiv = document.createElement('div');
+          noteDiv.id = `noteWrap_${gi}_${ii}`;
+          noteDiv.style.cssText = 'margin-top:4px;padding:0 4px;animation:fadeSlide 0.2s ease;';
+          const noteInput = document.createElement('input');
+          noteInput.type = 'text';
+          noteInput.className = 'form-input item-note-input';
+          noteInput.placeholder = '📝 ملاحظات العطل...';
+          noteInput.value = noteVal;
+          noteInput.oninput = (e) => {
+            if (!state.itemNotes) state.itemNotes = {};
+            state.itemNotes[noteKey] = e.target.value;
+          };
+          noteDiv.appendChild(noteInput);
+          itemWrap.appendChild(noteDiv);
+        } else if (status === 'issue' && isDone && noteVal) {
+          const noteBadge = document.createElement('div');
+          noteBadge.style.cssText = 'font-size:11px;color:var(--text-muted);padding:2px 8px 4px;font-style:italic;';
+          noteBadge.textContent = '📝 ' + noteVal;
+          itemWrap.appendChild(noteBadge);
+        }
+
+        itemsDiv.appendChild(itemWrap);
+      });
+
+      // ── أعطال أخرى (extra faults input) per group ──
+      const otherWrap = document.createElement('div');
+      otherWrap.style.cssText = 'margin-top:10px;padding:10px 4px 4px;border-top:1px solid var(--border);';
+      otherWrap.innerHTML = '<div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;font-weight:600;">➕ أعطال أخرى (اختياري)</div>';
+      const otherInput = document.createElement('input');
+      otherInput.type = 'text';
+      otherInput.className = 'form-input';
+      otherInput.placeholder = 'اكتب أي أعطال إضافية في هذا القسم...';
+      otherInput.style.cssText = 'font-size:12px;padding:9px 12px;';
+      otherInput.id = `otherFault_${gi}`;
+      otherInput.value = (state.otherFaults || {})[gi] || '';
+      if (isActive) {
+        otherInput.oninput = (e) => { if (!state.otherFaults) state.otherFaults = {}; state.otherFaults[gi] = e.target.value; };
+      } else {
+        otherInput.disabled = true;
+        otherInput.style.opacity = '0.6';
+      }
+      otherWrap.appendChild(otherInput);
+      itemsDiv.appendChild(otherWrap);
+    }
+
+    groupDiv.appendChild(itemsDiv);
+
+    // Result summary if done
+    if (isDone) {
+      const issueCount  = Object.values(state.inspectionData[gi] || {}).filter(v => v === 'issue').length;
+      const groupNote   = (state.groupNotes  || {})[gi] || '';
+      const otherFault  = (state.otherFaults || {})[gi] || '';
+      const totalIssues = issueCount + (groupNote ? 1 : 0) + (otherFault ? 1 : 0);
+      const resultDiv = document.createElement('div');
+      resultDiv.className = 'group-result ' + (totalIssues > 0 ? 'has-issues' : 'all-ok');
+      resultDiv.innerHTML = totalIssues > 0
+        ? `⚠️ تم رصد ${issueCount} مشكلة في هذا القسم${otherFault ? ' + أعطال أخرى' : ''}`
+        : '✅ جميع بنود هذا القسم سليمة';
+      groupDiv.appendChild(resultDiv);
+    }
+
+    // Next button for active group
+    if (isActive) {
+      const nextBtn = document.createElement('button');
+      nextBtn.className = 'next-group-btn';
+      nextBtn.id = 'nextGroupBtn' + gi;
+      const isLast = gi === groups.length - 1;
+      nextBtn.textContent = isLast ? 'إنهاء الفحص ✓' : 'التالي: ' + (groups[gi+1] ? groups[gi+1].title : '') + ' →';
+      nextBtn.onclick = () => confirmGroup(gi);
+      groupDiv.appendChild(nextBtn);
+    }
+
+    container.appendChild(groupDiv);
+  });
+
+  updateProgress();
+}
+
+function toggleItem(gi, ii) {
+  if (!state.inspectionData[gi]) state.inspectionData[gi] = {};
+  const current = state.inspectionData[gi][ii] || 'unset';
+  let next;
+  if (current === 'unset') next = 'issue';
+  else if (current === 'issue') next = 'ok';
+  else next = 'unset';
+
+  state.inspectionData[gi][ii] = next;
+
+  // Update item UI
+  const itemDiv = document.getElementById(`item_${gi}_${ii}`);
+  if (!itemDiv) return;
+
+  itemDiv.className = 'inspect-item' + (next === 'issue' ? ' selected' : next === 'ok' ? ' ok' : '');
+  const check = itemDiv.querySelector('.item-check');
+  if (check) check.textContent = next === 'issue' ? '✕' : next === 'ok' ? '✓' : '';
+
+  let badge = itemDiv.querySelector('.status-badge');
+  if (next !== 'unset') {
+    if (!badge) { badge = document.createElement('div'); itemDiv.appendChild(badge); }
+    badge.className = 'status-badge ' + (next === 'issue' ? 'issue' : 'good');
+    badge.textContent = next === 'issue' ? 'مشكلة' : 'سليم';
+  } else if (badge) { badge.remove(); }
+
+  // Toggle note input below item
+  const itemWrap = itemDiv.parentElement;
+  let existingNote = document.getElementById(`noteWrap_${gi}_${ii}`);
+  if (next === 'issue') {
+    if (!existingNote) {
+      const noteDiv = document.createElement('div');
+      noteDiv.id = `noteWrap_${gi}_${ii}`;
+      noteDiv.style.cssText = 'margin-top:4px;padding:0 4px;animation:fadeSlide 0.2s ease;';
+      const noteInput = document.createElement('input');
+      noteInput.type = 'text';
+      noteInput.className = 'form-input item-note-input';
+      noteInput.placeholder = '📝 ملاحظات العطل...';
+      const noteKey = gi + '_' + ii;
+      noteInput.value = (state.itemNotes || {})[noteKey] || '';
+      noteInput.oninput = (e) => { if (!state.itemNotes) state.itemNotes = {}; state.itemNotes[noteKey] = e.target.value; };
+      noteDiv.appendChild(noteInput);
+      itemWrap.appendChild(noteDiv);
+    }
+  } else {
+    if (existingNote) existingNote.remove();
+  }
+}
+
+function confirmGroup(gi) {
+  const groups = INSPECTIONS[state.vehicleType];
+  const isLast = gi === groups.length - 1;
+
+  // Check if all items were evaluated
+  const unsetCount = Object.values(state.inspectionData[gi]).filter(v => v === 'unset').length;
+  if (unsetCount > 0) {
+    showToast(`⚠️ يوجد ${unsetCount} بند لم يتم تحديده`);
+    // Auto mark unset as ok
+    for (let ii in state.inspectionData[gi]) {
+      if (state.inspectionData[gi][ii] === 'unset') {
+        state.inspectionData[gi][ii] = 'ok';
+      }
+    }
+  }
+
+  if (isLast) {
+    state.currentGroupIndex = gi + 1;
+    document.getElementById('inspectionGroups').innerHTML = '';
+    document.getElementById('inspectionComplete').style.display = 'block';
+    document.getElementById('inspectActions').style.display = 'flex';
+    updateProgress();
+  } else {
+    state.currentGroupIndex = gi + 1;
+    renderInspectionGroups();
+    // Scroll to new group
+    setTimeout(() => {
+      const newCard = document.getElementById('groupCard' + (gi + 1));
+      if (newCard) newCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  }
+}
+
+function updateProgress() {
+  const groups = INSPECTIONS[state.vehicleType];
+  const total = groups.length;
+  const done = state.currentGroupIndex;
+  const pct = Math.round((done / total) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = pct + '%';
+}
+
+// ============================================================
+// STEP 5: ATTACHMENTS
+// ============================================================
+function goToAttachments() {
+  // Set datetime
+  state.datetime = new Date();
+  const opts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+  document.getElementById('currentDatetime').textContent = state.datetime.toLocaleDateString('ar-SA', opts);
+
+  initSignature();
+  showScreen(5);
+}
+
+// Photos
+function handlePhotos(event) {
+  const files = Array.from(event.target.files);
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      state.photos.push(e.target.result);
+      renderPhotoGrid();
+    };
+    reader.readAsDataURL(file);
+  });
+  event.target.value = '';
+}
+
+function renderPhotoGrid() {
+  const grid = document.getElementById('photoGrid');
+  grid.innerHTML = '';
+  state.photos.forEach((src, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'photo-thumb';
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = 'صورة ' + (i+1);
+    img.onclick = () => openLightbox(src);
+    const btn = document.createElement('button');
+    btn.className = 'remove-photo';
+    btn.textContent = '✕';
+    btn.onclick = (e) => { e.stopPropagation(); removePhoto(i); };
+    wrap.appendChild(img);
+    wrap.appendChild(btn);
+    grid.appendChild(wrap);
+  });
+}
+
+function openLightbox(src) {
+  const lb = document.createElement('div');
+  lb.className = 'lightbox';
+  lb.innerHTML = `<button class="lightbox-close" onclick="this.parentElement.remove()">✕</button><img src="${src}">`;
+  lb.onclick = (e) => { if (e.target === lb) lb.remove(); };
+  document.body.appendChild(lb);
+}
+
+function removePhoto(i) {
+  state.photos.splice(i, 1);
+  renderPhotoGrid();
+}
+
+// Signature
+let sigCanvas, sigCtx, isDrawing = false, lastX = 0, lastY = 0;
+let sigMode = 'draw'; // draw | upload | type
+let sigTypedFont = "'Cairo', sans-serif";
+let sigUploadDataUrl = null;
+
+function switchSigTab(mode, btn) {
+  sigMode = mode;
+  document.querySelectorAll('.sig-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.sig-tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('sigTab' + mode.charAt(0).toUpperCase() + mode.slice(1)).classList.add('active');
+  if (mode === 'type') renderTypedSig();
+}
+
+function selectSigFont(btn) {
+  document.querySelectorAll('.sig-font-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  sigTypedFont = btn.dataset.font;
+  renderTypedSig();
+}
+
+function renderTypedSig() {
+  const canvas = document.getElementById('sigTypeCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const text = document.getElementById('sigTypeInput').value || '';
+  if (!text) return;
+  ctx.fillStyle = '#111';
+  ctx.font = `bold 42px ${sigTypedFont}`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+}
+
+function handleSigFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    sigUploadDataUrl = e.target.result;
+    document.getElementById('sigUploadImg').src = sigUploadDataUrl;
+    document.getElementById('sigUploadPreview').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+  event.target.value = '';
+}
+
+function clearSigUpload() {
+  sigUploadDataUrl = null;
+  document.getElementById('sigUploadPreview').style.display = 'none';
+  document.getElementById('sigUploadImg').src = '';
+}
+
+function initSignature() {
+  sigCanvas = document.getElementById('signatureCanvas');
+  sigCtx = sigCanvas.getContext('2d');
+  sigCtx.strokeStyle = '#000';
+  sigCtx.lineWidth = 2.5;
+  sigCtx.lineCap = 'round';
+  sigCtx.lineJoin = 'round';
+
+  sigCanvas.addEventListener('mousedown', startDraw);
+  sigCanvas.addEventListener('mousemove', draw);
+  sigCanvas.addEventListener('mouseup', stopDraw);
+  sigCanvas.addEventListener('mouseleave', stopDraw);
+  sigCanvas.addEventListener('touchstart', e => { e.preventDefault(); startDraw(e.touches[0]); }, {passive:false});
+  sigCanvas.addEventListener('touchmove', e => { e.preventDefault(); draw(e.touches[0]); }, {passive:false});
+  sigCanvas.addEventListener('touchend', stopDraw);
+}
+
+function getPos(e) {
+  const rect = sigCanvas.getBoundingClientRect();
+  const scaleX = sigCanvas.width / rect.width;
+  const scaleY = sigCanvas.height / rect.height;
+  return {
+    x: (e.clientX - rect.left) * scaleX,
+    y: (e.clientY - rect.top) * scaleY
+  };
+}
+
+function startDraw(e) {
+  isDrawing = true;
+  const pos = getPos(e);
+  lastX = pos.x; lastY = pos.y;
+  sigCtx.beginPath();
+  sigCtx.moveTo(lastX, lastY);
+}
+
+function draw(e) {
+  if (!isDrawing) return;
+  const pos = getPos(e);
+  sigCtx.lineTo(pos.x, pos.y);
+  sigCtx.stroke();
+  lastX = pos.x; lastY = pos.y;
+}
+
+function stopDraw() { isDrawing = false; }
+
+function clearSignature() {
+  sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+}
+
+function captureFinalSignature() {
+  if (sigMode === 'draw') {
+    return sigCanvas.toDataURL('image/png');
+  } else if (sigMode === 'upload') {
+    return sigUploadDataUrl || sigCanvas.toDataURL('image/png');
+  } else if (sigMode === 'type') {
+    return document.getElementById('sigTypeCanvas').toDataURL('image/png');
+  }
+  return sigCanvas.toDataURL('image/png');
+}
+
+// ============================================================
+// STEP 6: GENERATE REPORT
+// ============================================================
+function generateReport() {
+  state.signature = captureFinalSignature();
+  buildReport();
+  showScreen(6);
+}
+
+/* Build the full-color A4 HTML string used for both print and PDF */
+function buildPrintHTML() {
+  const groups = INSPECTIONS[state.vehicleType];
+  const dt = state.datetime ? state.datetime.toLocaleDateString('ar-SA', {
+    weekday:'long', year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit'
+  }) : '—';
+
+  // Count totals
+  let totalIssues = 0, totalOk = 0;
+  groups.forEach((group, gi) => {
+    group.items.forEach((_, ii) => {
+      const st = state.inspectionData[gi] ? state.inspectionData[gi][ii] : 'unset';
+      if (st === 'issue') totalIssues++;
+      else if (st === 'ok') totalOk++;
+    });
+  });
+
+  // Build info rows
+  let infoRows = `
+    <div class="pi"><div class="pl">نوع المركبة</div><div class="pv">${state.vehicleType}</div></div>
+    <div class="pi"><div class="pl">رقم المركبة</div><div class="pv">${state.vehicleNumber}</div></div>
+    ${state.plateNumber ? `<div class="pi" style="grid-column:span 2"><div class="pl">رقم لوحة المركبة</div><div class="pv" style="letter-spacing:3px;direction:ltr;font-size:14pt;">${state.plateNumber}</div></div>` : ''}
+    <div class="pi"><div class="pl">سائق الوردية النهارية</div><div class="pv">${state.dayDriver || '—'}</div></div>
+    <div class="pi"><div class="pl">سائق الوردية الليلية</div><div class="pv">${state.nightDriver || '—'}</div></div>
+    ${state.vehicleType === 'مضخة خرسانة' ? `
+    <div class="pi"><div class="pl">مشغل النهار</div><div class="pv">${state.dayOperator || '—'}</div></div>
+    <div class="pi"><div class="pl">مشغل الليل</div><div class="pv">${state.nightOperator || '—'}</div></div>` : ''}
+    <div class="pi" style="grid-column:span 2"><div class="pl">التاريخ والوقت</div><div class="pv">${dt}</div></div>
+  `;
+
+  // Build results
+  let resultsHTML = `
+    <div class="summary-row">
+      <div class="sb-red">⚠️ المشاكل: ${totalIssues}</div>
+      <div class="sb-green">✅ السليم: ${totalOk}</div>
+    </div>
+  `;
+
+  if (totalIssues === 0) {
+    resultsHTML += `<div class="no-issues">🎉 لا توجد مشاكل — المركبة في حالة ممتازة</div>`;
+  }
+
+  groups.forEach((group, gi) => {
+    const groupData  = state.inspectionData[gi] || {};
+    const groupNote  = (state.groupNotes  || {})[gi] || '';
+    const otherFault = (state.otherFaults || {})[gi] || '';
+
+    if (group.hasNote) {
+      if (!groupNote) return;
+      resultsHTML += `<div class="psection">
+        <div class="pst">${group.title}</div>
+        <div class="pitem"><div class="pdot-red"></div><span class="pitem-text">${groupNote}</span></div>
+      </div>`;
+      return;
+    }
+
+    const issues = [];
+    group.items.forEach((item, ii) => {
+      if (groupData[ii] === 'issue') {
+        const note = (state.itemNotes || {})[gi + '_' + ii] || '';
+        issues.push({ item, note });
+      }
+    });
+
+    if (issues.length === 0 && !otherFault) return;
+
+    resultsHTML += `<div class="psection"><div class="pst">${group.title}</div>`;
+    issues.forEach(({item, note}) => {
+      resultsHTML += `<div class="pitem">
+        <div class="pdot-red"></div>
+        <span class="pitem-text">${item}${note ? ' <em style="color:#999;font-size:9pt;">— ' + note + '</em>' : ''}</span>
+        <span class="pbadge-red">مشكلة</span>
+      </div>`;
+    });
+    if (otherFault) {
+      resultsHTML += `<div class="pitem" style="background:#fffbf0;">
+        <div class="pdot-red"></div>
+        <span class="pitem-text"><strong>أعطال أخرى:</strong> ${otherFault}</span>
+        <span class="pbadge-red">ملاحظة</span>
+      </div>`;
+    }
+    resultsHTML += `</div>`;
+  });
+
+  // Photos
+  let photosHTML = '';
+  if (state.photos.length > 0) {
+    photosHTML = `<div class="psection">
+      <div class="pst">الصور المرفقة</div>
+      <div class="pgrid">
+        ${state.photos.map(src => `<img src="${src}" class="pphoto">`).join('')}
+      </div>
+    </div>`;
+  }
+
+  // Signature
+  const sigHTML = state.signature ? `<div class="psection">
+    <div class="pst">التوقيع</div>
+    <div style="text-align:center"><img src="${state.signature}" class="psig"></div>
+  </div>` : '';
+
+  return `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>تقرير فحص المركبة — ${state.vehicleNumber}</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:'Cairo',sans-serif;
+    direction:rtl;
+    background:#f0f4f8;
+    color:#1a1a2e;
+    -webkit-print-color-adjust:exact;
+    print-color-adjust:exact;
+  }
+  .page{
+    width:185mm;
+    margin:8mm auto;
+    background:#fff;
+    border-radius:8px;
+    box-shadow:0 4px 24px rgba(0,0,0,0.12);
+    padding:14mm 12mm;
+    transform:scale(0.92);
+    transform-origin:top center;
+  }
+  /* Header */
+  .ph{
+    background:linear-gradient(135deg,#0d1e35 0%,#1a3a5c 100%);
+    border-radius:10px;
+    padding:16px 20px;
+    margin-bottom:16px;
+    text-align:center;
+    color:#fff;
+  }
+  .ph h1{font-size:20pt;font-weight:900;color:#f5a623;margin-bottom:4px;}
+  .ph p{font-size:9pt;color:rgba(255,255,255,0.7);}
+  /* Info grid */
+  .pig{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    margin-bottom:14px;
+  }
+  .pi{background:#f7f9fc;border:1.5px solid #e2e8f0;border-radius:8px;padding:8px 12px;border-right:4px solid #f5a623;}
+  .pl{font-size:8pt;color:#7a8fa8;margin-bottom:2px;}
+  .pv{font-size:11pt;font-weight:800;color:#1a1a2e;}
+  /* Summary */
+  .summary-row{display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
+  .sb-red{background:#fef2f2;border:1.5px solid #fca5a5;border-radius:20px;padding:6px 16px;color:#dc2626;font-weight:800;font-size:11pt;}
+  .sb-green{background:#f0fdf4;border:1.5px solid #86efac;border-radius:20px;padding:6px 16px;color:#16a34a;font-weight:800;font-size:11pt;}
+  .no-issues{text-align:center;padding:16px;background:#f0fdf4;border:2px solid #86efac;border-radius:10px;color:#16a34a;font-weight:800;font-size:13pt;margin-bottom:14px;}
+  /* Sections */
+  .psection{margin-bottom:14px;}
+  .pst{
+    font-size:12pt;font-weight:900;
+    color:#fff;
+    background:linear-gradient(135deg,#b8730a,#e8891a);
+    padding:6px 14px;border-radius:8px;
+    margin-bottom:8px;
+  }
+  /* Items */
+  .pitem{display:flex;align-items:center;gap:8px;padding:5px 8px;border-bottom:1px solid #f1f5f9;font-size:10pt;}
+  .pitem:nth-child(even){background:#fafbfc;}
+  .pdot-red{width:8px;height:8px;border-radius:50%;background:#dc2626;flex-shrink:0;}
+  .pitem-text{flex:1;color:#1a1a2e;}
+  .pbadge-red{background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:12px;padding:2px 10px;font-size:9pt;font-weight:700;white-space:nowrap;}
+  /* Photos */
+  .pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;}
+  .pphoto{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;border:1.5px solid #e2e8f0;}
+  /* Signature */
+  .psig{max-width:180px;border:1.5px solid #e2e8f0;border-radius:8px;background:#f9f9f9;display:block;margin:0 auto;}
+  /* Footer */
+  .pfooter{margin-top:20px;padding-top:10px;border-top:2px solid #f5a623;text-align:center;font-size:8pt;color:#7a8fa8;}
+  /* Print */
+  @media print{
+    body{background:#fff;}
+    .page{
+      width:100%;margin:0;border-radius:0;box-shadow:none;
+      padding:12mm 10mm;
+      transform:scale(1);
+    }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="ph">
+    <h1>🚛 تقرير فحص المركبة${state.plateNumber ? '<br><span style="font-size:14pt;font-weight:700;color:rgba(255,255,255,0.9);letter-spacing:3px;direction:ltr;display:inline-block;margin-top:4px;">صاحبة اللوحة الرقمية: ' + state.plateNumber + '</span>' : ''}</h1>
+    <p>${dt}</p>
+  </div>
+  <div class="pig">${infoRows}</div>
+  ${resultsHTML}
+  ${photosHTML}
+  ${sigHTML}
+  <div class="pfooter">تم إنشاء هذا التقرير تلقائياً بواسطة نظام فحص المركبات</div>
+</div>
+
+</body>
+</html>`;
+}
+
+/* Print via hidden iframe */
+function doPrint() {
+  const html = buildPrintHTML();
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:210mm;height:297mm;border:0;';
+  document.body.appendChild(iframe);
+  const doc = iframe.contentDocument || iframe.contentWindow.document;
+  doc.open(); doc.write(html); doc.close();
+  iframe.onload = () => {
+    setTimeout(() => {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+      setTimeout(() => iframe.remove(), 3000);
+    }, 800);
+  };
+  // Fallback if onload doesn't fire
+  setTimeout(() => {
+    if (document.body.contains(iframe)) {
+      try { iframe.contentWindow.focus(); iframe.contentWindow.print(); } catch(e){}
+      setTimeout(() => { try { iframe.remove(); } catch(e){} }, 3000);
+    }
+  }, 2000);
+}
+
+/* Save as PDF — opens print dialog in new window */
+function savePDF() {
+  const html = buildPrintHTML();
+  const win = window.open('', '_blank', 'width=900,height=700');
+  if (!win) { showToast('⚠️ السماح بالنوافذ المنبثقة ثم حاول'); return; }
+  win.document.open(); win.document.write(html); win.document.close();
+  win.document.title = 'تقرير_فحص_' + (state.vehicleNumber || '');
+  setTimeout(() => { try { win.focus(); win.print(); } catch(e){} }, 1000);
+  showToast('📄 اختر "حفظ كـ PDF" من نافذة الطباعة');
+}
+
+function buildReport() {
+  const groups = INSPECTIONS[state.vehicleType];
+  const dt = state.datetime ? state.datetime.toLocaleDateString('ar-SA', {
+    weekday:'long', year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit'
+  }) : '—';
+
+  let totalIssues = 0, totalOk = 0;
+  groups.forEach((group, gi) => {
+    if (group.hasNote) {
+      if ((state.groupNotes||{})[gi]) totalIssues++;
+      return;
+    }
+    group.items.forEach((_, ii) => {
+      const st = (state.inspectionData[gi]||{})[ii] || 'unset';
+      if (st === 'issue') totalIssues++;
+      else if (st === 'ok') totalOk++;
+    });
+    if ((state.otherFaults||{})[gi]) totalIssues++;
+  });
+
+  const isLoader = state.vehicleType === 'لودر';
+
+  let previewHTML = `
+    <div class="report-header-block">
+      <h2>تقرير فحص المركبة</h2>
+      ${state.plateNumber ? `<div style="font-size:15px;font-weight:700;color:var(--accent);margin-top:4px;letter-spacing:2px;direction:ltr;">صاحبة اللوحة: ${state.plateNumber}</div>` : ''}
+      <p>${dt}</p>
+    </div>
+    <div class="report-info-grid">
+      <div class="report-info-item"><div class="lbl">نوع المركبة</div><div class="val">${state.vehicleType}</div></div>
+      <div class="report-info-item"><div class="lbl">رقم المركبة</div><div class="val">${state.vehicleNumber}</div></div>
+      ${state.plateNumber ? `<div class="report-info-item" style="grid-column:span 2"><div class="lbl">رقم لوحة المركبة</div><div class="val" style="letter-spacing:3px;direction:ltr;font-size:16px;">${state.plateNumber}</div></div>` : ''}
+      ${isLoader && state.loaderModel ? `<div class="report-info-item" style="grid-column:span 2"><div class="lbl">موديل اللودر</div><div class="val">${state.loaderModel}</div></div>` : ''}
+      ${isLoader && state.bladeType ? `<div class="report-info-item" style="grid-column:span 2"><div class="lbl">نوع الشفرة</div><div class="val">${state.bladeType}</div></div>` : ''}
+      <div class="report-info-item"><div class="lbl">سائق الوردية النهارية</div><div class="val">${state.dayDriver || '—'}</div></div>
+      ${!isLoader ? `<div class="report-info-item"><div class="lbl">سائق الوردية الليلية</div><div class="val">${state.nightDriver || '—'}</div></div>` : ''}
+      ${state.vehicleType === 'مضخة خرسانة' ? `
+      <div class="report-info-item"><div class="lbl">مشغل النهار</div><div class="val">${state.dayOperator||'—'}</div></div>
+      <div class="report-info-item"><div class="lbl">مشغل الليل</div><div class="val">${state.nightOperator||'—'}</div></div>` : ''}
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+      <div class="summary-badge badge-issues">⚠️ ${totalIssues} مشكلة</div>
+      <div class="summary-badge badge-ok">✅ ${totalOk} سليم</div>
+    </div>
+  `;
+
+  if (totalIssues === 0) {
+    previewHTML += `<div style="text-align:center;padding:20px;color:var(--green);font-weight:800;font-size:16px;">🎉 لا توجد مشاكل - المركبة في حالة ممتازة</div>`;
+  }
+
+  groups.forEach((group, gi) => {
+    const groupData  = state.inspectionData[gi] || {};
+    const groupNote  = (state.groupNotes||{})[gi] || '';
+    const otherFault = (state.otherFaults||{})[gi] || '';
+
+    if (group.hasNote) {
+      if (!groupNote) return;
+      previewHTML += `<div class="report-section-title">${group.title}</div>`;
+      previewHTML += `<div class="report-issue-item"><div class="issue-dot"></div><span>${groupNote}</span></div>`;
+      return;
+    }
+
+    const issues = [];
+    group.items.forEach((item, ii) => {
+      if (groupData[ii] === 'issue') {
+        const note = (state.itemNotes||{})[gi+'_'+ii] || '';
+        issues.push({ item, note });
+      }
+    });
+    if (issues.length === 0 && !otherFault) return;
+
+    previewHTML += `<div class="report-section-title">${group.title}</div>`;
+    issues.forEach(({item, note}) => {
+      previewHTML += `<div class="report-issue-item">
+        <div class="issue-dot"></div>
+        <span style="flex:1">${item}${note ? `<br><span style="font-size:11px;color:var(--text-muted);font-style:italic;">📝 ${note}</span>` : ''}</span>
+        <span class="status-badge issue" style="margin-right:auto">مشكلة</span>
+      </div>`;
+    });
+    if (otherFault) {
+      previewHTML += `<div class="report-issue-item">
+        <div class="issue-dot"></div>
+        <span style="flex:1"><strong>أعطال أخرى:</strong> ${otherFault}</span>
+        <span class="status-badge issue" style="margin-right:auto">ملاحظة</span>
+      </div>`;
+    }
+  });
+
+  if (state.photos.length > 0) {
+    previewHTML += `<div class="report-section-title">الصور المرفقة</div>
+      <div class="report-photos">
+        ${state.photos.map(src => `<img src="${src}" style="cursor:zoom-in;" onclick="openLightbox('${src}')">`).join('')}
+      </div>`;
+  }
+  if (state.signature) {
+    previewHTML += `<div class="report-section-title">التوقيع</div>
+      <img src="${state.signature}" class="report-sig-img" alt="توقيع">`;
+  }
+
+  document.getElementById('reportPreview').innerHTML = previewHTML;
+}
+
+// ============================================================
+// MODAL
+// ============================================================
+function showModal(title, content) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalContent').innerHTML = content;
+  document.getElementById('modalOverlay').style.display = 'flex';
+}
+function closeModal(e) {
+  if (!e || e.target === document.getElementById('modalOverlay'))
+    document.getElementById('modalOverlay').style.display = 'none';
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function showToast(msg) {
+  const ex = document.querySelector('.toast');
+  if (ex) ex.remove();
+  const t = document.createElement('div');
+  t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2800);
+}
+
+// ============================================================
+// RESET
+// ============================================================
+function resetAll() {
+  if (!confirm('هل تريد بدء فحص جديد؟')) return;
+  Object.assign(state, {
+    vehicleType:null, vehicleNumber:null,
+    plateNumber:'', loaderModel:'', bladeType:'',
+    dayDriver:'', nightDriver:'',
+    dayOperator:'', nightOperator:'',
+    inspectionData:{}, itemNotes:{}, groupNotes:{}, otherFaults:{},
+    photos:[], signature:null, datetime:null, currentGroupIndex:0
+  });
+  ['dayDriver','nightDriver','dayOperator','nightOperator','plateNumber','loaderModel'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.querySelectorAll('input[name="bladeType"]').forEach(r => r.checked = false);
+  ['bladeTypeShafra','bladeTypeZwafir'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.style.borderColor=''; el.style.background=''; }
+  });
+  ['nightDriverGroup','plateNumberGroup','s3VehicleNumRow'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.style.display='';
+  });
+  ['pumpFields','loaderFields'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.style.display='none';
+  });
+  const pg = document.getElementById('photoGrid');
+  if (pg) pg.innerHTML = '';
+  const ig = document.getElementById('inspectionGroups');
+  if (ig) ig.innerHTML = '';
+  const ic = document.getElementById('inspectionComplete');
+  if (ic) ic.style.display = 'none';
+  const ia = document.getElementById('inspectActions');
+  if (ia) ia.style.display = 'none';
+  if (sigCtx) sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+  showScreen(1);
+}
+
+// ============================================================
+// PLATE SCANNER & OCR
+// ============================================================
+let plateStream     = null;
+let plateFacingMode = 'environment';
+let tesseractWorker = null;
+
+const TESS_BASE = 'https://cdn.jsdelivr.net/npm/tesseract.js@4.1.4/dist/';
+const TESS_LANG = 'https://tessdata.projectnaptha.com/4.0.0/';
+
+function updateOcrMsg(msg) {
+  const el = document.getElementById('ocrMsg');
+  if (el) el.textContent = msg;
+}
+
+async function getTesseractWorker() {
+  if (tesseractWorker) return tesseractWorker;
+  updateOcrMsg('جارٍ تهيئة محرك القراءة...');
+
+  const logFn = m => {
+    if      (m.status==='loading tesseract core')       updateOcrMsg('جارٍ تحميل المحرك...');
+    else if (m.status==='loading language traineddata') updateOcrMsg('جارٍ تحميل بيانات اللغة... '+Math.round((m.progress||0)*100)+'%');
+    else if (m.status==='initializing api')             updateOcrMsg('جارٍ التهيئة...');
+    else if (m.status==='recognizing text')             updateOcrMsg('جارٍ قراءة اللوحة... '+Math.round((m.progress||0)*100)+'%');
+  };
+
+  let w;
+  // Method A: v4 standard API
+  try {
+    w = await Tesseract.createWorker('ara+eng', 1, {
+      workerPath: TESS_BASE+'worker.min.js',
+      langPath:   TESS_LANG,
+      corePath:   TESS_BASE+'tesseract-core.wasm.js',
+      logger: logFn
+    });
+  } catch(e1) {
+    console.warn('OCR Method A failed:', e1.message);
+    // Method B: auto paths
+    try {
+      w = await Tesseract.createWorker('ara+eng', 1, { logger: logFn });
+    } catch(e2) {
+      console.warn('OCR Method B failed:', e2.message);
+      // Method C: old-style
+      w = await Tesseract.createWorker({ logger: logFn });
+      await w.loadLanguage('ara+eng');
+      await w.initialize('ara+eng');
+    }
+  }
+
+  try {
+    await w.setParameters({
+      // PSM 11 = Sparse text — best for license plates with mixed content
+      tessedit_pageseg_mode: '11',
+      tessedit_char_whitelist: 'أبتثجحخدذرزسشصضطظعغفقكلمنهوي٠١٢٣٤٥٦٧٨٩0123456789 ',
+    });
+  } catch(e) {}
+
+  tesseractWorker = w;
+  return w;
+}
+
+async function runOCR(imageData) {
+  const procEl  = document.getElementById('ocrProcessing');
+  const sheetEl = document.getElementById('ocrResultSheet');
+  const dispEl  = document.getElementById('ocrPlateDisplay');
+  const editEl  = document.getElementById('ocrPlateEdit');
+
+  procEl.style.display  = 'flex';
+  sheetEl.style.display = 'none';
+
+  if (typeof Tesseract === 'undefined') {
+    procEl.style.display  = 'none';
+    dispEl.textContent    = '—';
+    editEl.value          = '';
+    sheetEl.style.display = 'block';
+    showToast('⚠️ تحقق من الاتصال بالإنترنت وأعد المحاولة');
+    return;
+  }
+
+  try {
+    const worker = await getTesseractWorker();
+    updateOcrMsg('جارٍ تحليل اللوحة...');
+    const { data: { text } } = await worker.recognize(imageData);
+    const cleaned = parseEgyptianPlate(text);
+    procEl.style.display   = 'none';
+    dispEl.textContent     = cleaned || '—';
+    editEl.value           = cleaned;
+    sheetEl.style.display  = 'block';
+  } catch(err) {
+    console.error('OCR error:', err);
+    try { if (tesseractWorker) tesseractWorker.terminate(); } catch(_){}
+    tesseractWorker = null;
+    procEl.style.display   = 'none';
+    dispEl.textContent     = '—';
+    editEl.value           = '';
+    sheetEl.style.display  = 'block';
+    showToast('⚠️ تعذرت القراءة — عدّل الرقم يدوياً');
+  }
+}
+
+function parseEgyptianPlate(rawText) {
+  if (!rawText) return '';
+
+  // Normalize whitespace
+  let t = rawText.replace(/[\r\n\t]/g, ' ').replace(/\s+/g, ' ').trim();
+
+  // Convert Arabic-Indic digits to Western digits
+  t = t.replace(/[٠-٩]/g, d => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)));
+
+  // ── Remove known noise words that appear on Egyptian plates ──
+  // "مصر" (Egypt label on blue strip), governorate codes, etc.
+  const NOISE_WORDS = ['مصر', 'مصر.', 'Egypt', 'EGYPT', 'جمهورية', 'العربية'];
+  NOISE_WORDS.forEach(w => {
+    t = t.replace(new RegExp(w, 'g'), ' ');
+  });
+  t = t.replace(/\s+/g, ' ').trim();
+
+  // ── Extract Arabic letters (exclude noise chars) ──
+  // Egyptian plates use: أ ب ت ث ج ح خ د ذ ر ز س ش ص ض ط ظ ع غ ف ق ك ل م ن ه و ي
+  const VALID_AR = /[أبتثجحخدذرزسشصضطظعغفقكلمنهوي]/g;
+  const arLetters = t.match(VALID_AR) || [];
+
+  // ── Extract digit groups ──
+  const digitGroups = t.match(/\d+/g) || [];
+  const digits = digitGroups.join('');
+
+  // ── Egyptian plate formats ──
+  // Modern: 3 letters + 4 digits  (e.g.  أ ب ج  ١٢٣٤)
+  // Old:    2 letters + 4 digits
+  // Private: 3-4 digits only (for some vehicles)
+  // Trim letters to max 3 and digits to max 4
+  const lettersStr = arLetters.slice(0, 3).join(' ');
+  const digitsStr  = digits.slice(0, 4);
+
+  if (lettersStr && digitsStr) return lettersStr + '  ' + digitsStr;
+  if (lettersStr && !digitsStr) return lettersStr;
+  if (!lettersStr && digitsStr) return digitsStr;
+
+  // Fallback: return cleaned raw (strip non-plate chars)
+  return t.replace(/[^أبتثجحخدذرزسشصضطظعغفقكلمنهوي0-9\s]/g, '').trim().substring(0, 15);
+}
+
+async function openPlateScanner() {
+  document.getElementById('plateScanOverlay').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  await startCamera();
+}
+
+async function startCamera() {
+  stopCamera();
+  const video = document.getElementById('plateVideo');
+  const constraints = [
+    { facingMode: plateFacingMode, width:{ideal:1920}, height:{ideal:1080} },
+    { facingMode: plateFacingMode },
+    { video: true }
+  ];
+  for (const c of constraints) {
+    try {
+      plateStream = await navigator.mediaDevices.getUserMedia({ video: c, audio: false });
+      video.srcObject = plateStream;
+      return;
+    } catch(e) { console.warn('Camera attempt failed:', e.message); }
+  }
+  showToast('❌ لا يمكن الوصول للكاميرا — جرب رفع صورة');
+}
+
+function stopCamera() {
+  if (plateStream) { plateStream.getTracks().forEach(t => t.stop()); plateStream = null; }
+  const v = document.getElementById('plateVideo');
+  if (v) v.srcObject = null;
+}
+
+function closePlateScanner() {
+  stopCamera();
+  document.getElementById('plateScanOverlay').style.display = 'none';
+  document.getElementById('ocrProcessing').style.display    = 'none';
+  document.getElementById('ocrResultSheet').style.display   = 'none';
+  document.body.style.overflow = '';
+}
+
+async function switchCamera() {
+  plateFacingMode = plateFacingMode === 'environment' ? 'user' : 'environment';
+  await startCamera();
+}
+
+function captureAndOCR() {
+  const video = document.getElementById('plateVideo');
+  if (!video.videoWidth) { showToast('⚠️ الكاميرا غير جاهزة'); return; }
+
+  const canvas = document.getElementById('plateCaptureCanvas');
+  canvas.width  = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0);
+
+  // Crop to plate frame region (~85% width, ~28% height, centered)
+  const cw = canvas.width, ch = canvas.height;
+  const fw = Math.round(cw * 0.85), fh = Math.round(ch * 0.30);
+  const fx = Math.round((cw - fw) / 2), fy = Math.round((ch - fh) / 2);
+
+  // Upscale the crop 3× for better OCR accuracy on small plates
+  const SCALE = 3;
+  const crop = document.createElement('canvas');
+  crop.width  = fw * SCALE;
+  crop.height = fh * SCALE;
+  const cctx = crop.getContext('2d');
+  cctx.imageSmoothingEnabled = true;
+  cctx.imageSmoothingQuality = 'high';
+  cctx.drawImage(canvas, fx, fy, fw, fh, 0, 0, crop.width, crop.height);
+
+  preprocessForOCR(cctx, crop.width, crop.height);
+  runOCR(crop.toDataURL('image/png'));
+}
+
+// Shared preprocessing: grayscale + adaptive threshold + mild sharpening
+function preprocessForOCR(ctx, w, h) {
+  const id = ctx.getImageData(0, 0, w, h);
+  const d  = id.data;
+
+  // Step 1: Grayscale
+  const gray = new Uint8Array(w * h);
+  for (let i = 0; i < d.length; i += 4) {
+    gray[i >> 2] = Math.round(0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2]);
+  }
+
+  // Step 2: Compute mean for simple threshold
+  let sum = 0;
+  for (let i = 0; i < gray.length; i++) sum += gray[i];
+  const mean = sum / gray.length;
+
+  // Step 3: Threshold (dark text on white plate → keep dark pixels as black)
+  // White plate: text pixels are darker than mean
+  // Use mean + small offset as threshold
+  const threshold = Math.min(mean + 20, 200);
+
+  for (let i = 0; i < gray.length; i++) {
+    // Binarize: below threshold → black (text), above → white (background)
+    const val = gray[i] < threshold ? 0 : 255;
+    const pi  = i * 4;
+    d[pi] = d[pi+1] = d[pi+2] = val;
+    d[pi+3] = 255;
+  }
+
+  ctx.putImageData(id, 0, 0);
+}
+
+function processGalleryImage(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  document.getElementById('ocrProcessing').style.display  = 'flex';
+  document.getElementById('ocrResultSheet').style.display = 'none';
+  updateOcrMsg('جارٍ تحضير الصورة...');
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      // Cap at 2400px for speed, upscale small images to at least 800px
+      const MIN = 800, MAX = 2400;
+      let w = img.width, h = img.height;
+      const ratio = Math.max(Math.min(MAX / Math.max(w, h), 1), MIN / Math.min(w, h));
+      w = Math.round(w * ratio);
+      h = Math.round(h * ratio);
+
+      const cv  = document.createElement('canvas');
+      cv.width  = w; cv.height = h;
+      const ctx = cv.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, w, h);
+
+      preprocessForOCR(ctx, w, h);
+      runOCR(cv.toDataURL('image/png'));
+    };
+    img.onerror = () => {
+      document.getElementById('ocrProcessing').style.display = 'none';
+      showToast('❌ تعذر تحميل الصورة');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+  event.target.value = '';
+}
+
+function showOCRMsg(msg) { updateOcrMsg(msg); }
+function retakeScan() { document.getElementById('ocrResultSheet').style.display='none'; }
+
+function confirmPlate() {
+  const val = document.getElementById('ocrPlateEdit').value.trim();
+  const inp = document.getElementById('plateNumber');
+  if (inp) inp.value = val;
+  state.plateNumber = val;
+  closePlateScanner();
+  showToast('✅ تم حفظ رقم اللوحة: ' + val);
+}
+
+// ============================================================
+// PWA + INIT
+// ============================================================
+function registerPWA() {
+  const ICON = 'https://i.postimg.cc/5tcH9ZMQ/aykwnt-khlatt-asmnt.png';
+  ['apple-touch-icon','shortcut icon'].forEach(rel => {
+    const l=document.createElement('link'); l.rel=rel; l.href=ICON;
+    document.head.appendChild(l);
+  });
+  try {
+    const manifest={
+      name:'فحص المركبات', short_name:'فحص',
+      start_url:location.href, display:'standalone',
+      orientation:'portrait-primary',
+      theme_color:'#0a1628', background_color:'#060d1a',
+      lang:'ar', dir:'rtl',
+      icons:[{src:ICON,sizes:'512x512',type:'image/png',purpose:'any maskable'}]
+    };
+    const mBlob=new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'});
+    const link=document.createElement('link');
+    link.rel='manifest'; link.href=URL.createObjectURL(mBlob);
+    document.head.appendChild(link);
+  } catch(e){}
+
+  if (!('serviceWorker' in navigator)) return;
+  const CACHE='vehicle-inspect-v5';
+  const sw=`
+const C='${CACHE}';
+const CDN=['unpkg.com','jsdelivr.net','tessdata.projectnaptha','postimg.cc','fonts.googleapis','fonts.gstatic'];
+self.addEventListener('install',e=>{self.skipWaiting();});
+self.addEventListener('activate',e=>{
+  e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));
+});
+self.addEventListener('fetch',e=>{
+  if(e.request.method!=='GET')return;
+  const isCDN=CDN.some(d=>e.request.url.includes(d));
+  e.respondWith(
+    isCDN
+      ?caches.match(e.request).then(h=>h||fetch(e.request).then(r=>{if(r.ok){const c=r.clone();caches.open(C).then(ca=>ca.put(e.request,c));}return r;}))
+      :fetch(e.request).then(r=>{if(r.ok){const c=r.clone();caches.open(C).then(ca=>ca.put(e.request,c));}return r;}).catch(()=>caches.match(e.request))
+  );
+});`;
+  try {
+    navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'}))).catch(()=>{});
+  } catch(e){}
+
+  window.addEventListener('beforeinstallprompt',e=>{
+    e.preventDefault(); window._installEvt=e;
+    if (!document.getElementById('installBanner')) {
+      const b=document.createElement('div');
+      b.id='installBanner';
+      b.style.cssText='position:fixed;bottom:80px;left:12px;right:12px;z-index:4000;background:linear-gradient(135deg,#0d1e35,#1a3a5c);border:1.5px solid rgba(245,166,35,0.4);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,0.5);font-family:"Cairo",sans-serif;direction:rtl;';
+      b.innerHTML='<div style="font-size:28px">📱</div><div style="flex:1"><div style="font-size:13px;font-weight:800;color:#fff">ثبّت التطبيق</div><div style="font-size:11px;color:rgba(255,255,255,0.6)">أضفه لشاشتك الرئيسية</div></div><button onclick="window._installEvt&&window._installEvt.prompt()" style="background:#f5a623;border:none;border-radius:10px;padding:8px 16px;font-size:13px;font-weight:800;cursor:pointer;font-family:Cairo,sans-serif">تثبيت</button><button onclick="document.getElementById(\'installBanner\').remove()" style="background:rgba(255,255,255,0.1);border:none;border-radius:8px;width:30px;height:30px;color:#fff;font-size:16px;cursor:pointer">✕</button>';
+      document.body.appendChild(b);
+    }
+  });
+  window.addEventListener('appinstalled',()=>{ document.getElementById('installBanner')?.remove(); });
+}
+
+async function prewarmTesseract() {
+  if (typeof Tesseract === 'undefined') return;
+  setTimeout(async () => {
+    try { await getTesseractWorker(); console.log('✅ Tesseract ready'); }
+    catch(e) { console.warn('Tesseract prewarm failed:', e.message); tesseractWorker=null; }
+  }, 4000);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  showScreen(1);
+  registerPWA();
+  prewarmTesseract();
+});
+</script>
+</body>
+</html>
