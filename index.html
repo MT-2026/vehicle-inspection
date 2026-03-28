@@ -2980,10 +2980,9 @@ async function getTesseractWorker() {
 
   try {
     await w.setParameters({
-      // PSM 11 = Sparse text — best for license plates with mixed content
-      tessedit_pageseg_mode: '11',
-      tessedit_char_whitelist: 'أبتثجحخدذرزسشصضطظعغفقكلمنهوي٠١٢٣٤٥٦٧٨٩0123456789 ',
-    });
+  tessedit_pageseg_mode: '7', // Mode 7 للوحات (سطر واحد)
+  tessedit_char_whitelist: 'أبتثجحخدذرزسشصضطظعغفقكلمنهوي0123456789٠١٢٣٤٥٦٧٨٩ ',
+});
   } catch(e) {}
 
   tesseractWorker = w;
@@ -3103,12 +3102,15 @@ function captureAndOCR() {
   canvas.width  = video.videoWidth;
   canvas.height = video.videoHeight;
   const ctx = canvas.getContext('2d');
+  cctx.filter = 'grayscale(1) contrast(3) brightness(1.1)'; // بيخلي الحروف سودة فاحمة
+  cctx.drawImage(canvas, fx, fy, fw, fh, 0, 0, crop.width, crop.height);
   ctx.drawImage(video, 0, 0);
 
   // Crop to plate frame region (~85% width, ~28% height, centered)
-  const cw = canvas.width, ch = canvas.height;
-  const fw = Math.round(cw * 0.85), fh = Math.round(ch * 0.30);
-  const fx = Math.round((cw - fw) / 2), fy = Math.round((ch - fh) / 2);
+  const fw = Math.round(cw * 0.70); // عرض أقل للهرب من أطراف اللوحة
+  const fh = Math.round(ch * 0.20); // ارتفاع قليل جداً ليركز على "ن ي م ٥١٣" فقط
+  const fx = Math.round((cw - fw) / 2);
+  const fy = Math.round(ch * 0.55); // بننزل لتحت شوية عشان نبعد عن كلمة "مصر" الزرقاء
 
   // Upscale the crop 3× for better OCR accuracy on small plates
   const SCALE = 3;
